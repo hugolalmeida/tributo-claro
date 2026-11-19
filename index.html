@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR" data-modo="demo">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tributo Claro (demonstração) · Simulador CBS/IBS do Simples Nacional</title>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <h1>Tributo Claro</h1>
+    <p>Simulador de CBS e IBS para empresas do Simples Nacional (Reforma Tributária, LC 214/2025)</p>
+  </header>
+
+  <aside class="aviso aviso-demo" id="aviso-demo" role="alert" hidden>
+    <strong>Demonstração da tela.</strong> Esta versão não usa o motor da Receita: os valores são uma conta ilustrativa
+    (valor do item × alíquota informada), não o cálculo oficial. Use só para ver a tela. Nada do que você digitar sai do
+    seu navegador, e o histórico some ao recarregar a página.
+  </aside>
+
+  <aside class="aviso" role="note">
+    <strong>Isto é uma simulação, não uma apuração oficial.</strong>
+    Os valores são estimativas feitas a partir dos dados informados e não são o imposto devido.
+    O Tributo Claro usa a calculadora pública da Reforma Tributária, mas não é um produto oficial,
+    homologado ou endossado pela Receita Federal. Confira com o seu contador antes de decidir.
+  </aside>
+
+  <main>
+    <form id="form" novalidate>
+      <fieldset>
+        <legend>Operação</legend>
+        <div class="linha">
+          <label>Data da operação <input type="date" name="data" required></label>
+          <label>Documento
+            <select name="tpDoc" required>
+              <option value="55">NF-e (55)</option>
+              <option value="65">NFC-e (65)</option>
+            </select>
+          </label>
+          <label>Regime <select name="regime" id="regime" required></select></label>
+          <label>Compra governamental
+            <select name="tpEnteGov">
+              <option value="">Não</option>
+              <option value="1">União</option>
+              <option value="2">Estado</option>
+              <option value="3">Distrito Federal</option>
+              <option value="4">Município</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Itens</legend>
+        <datalist id="lista-atividades"></datalist>
+        <p class="dica" id="dica-atividades">Escolha a data para carregar as atividades do Simples Nacional.</p>
+        <table class="itens">
+          <thead>
+            <tr>
+              <th>#</th><th>Atividade (cAtivSN)</th><th>cClassTrib</th><th>Valor do item (R$)</th>
+              <th>Imposto Seletivo (R$)</th><th>Alíq. IBS (%)</th><th>Alíq. CBS (%)</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="itens"></tbody>
+        </table>
+        <button type="button" id="adicionar" class="secundario">Adicionar item</button>
+        <p class="dica">Valor do item = produto + frete + seguro + outras despesas − desconto, sem o Imposto Seletivo.
+          As alíquotas efetivas do Simples vêm do cálculo do DAS do período.</p>
+      </fieldset>
+
+      <div class="acoes">
+        <button type="submit" id="simular">Simular</button>
+        <span id="status" role="status" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <section id="resultado" hidden aria-labelledby="titulo-resultado">
+      <h2 id="titulo-resultado">Resultado da simulação</h2>
+      <div id="resultado-conteudo"></div>
+    </section>
+
+    <section aria-labelledby="titulo-historico">
+      <h2 id="titulo-historico">Histórico</h2>
+      <table class="historico">
+        <thead><tr><th>Quando</th><th>Data da operação</th><th>Itens</th><th>Situação</th><th>Total simulado</th><th></th></tr></thead>
+        <tbody id="historico"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    Na versão completa, o cálculo é feito pela <a href="https://github.com/ReceitaFederal/calculadora-rtc-simples-nacional" rel="noopener noreferrer">calculadora-rtc-simples-nacional</a>
+    (Receita Federal do Brasil, licença MIT). Código do simulador:
+    <a href="https://github.com/hugolalmeida/tributo-claro" rel="noopener noreferrer">tributo-claro</a>.
+  </footer>
+
+  <template id="tpl-item">
+    <tr>
+      <td class="num"></td>
+      <td><input name="cAtivSN" list="lista-atividades" inputmode="numeric" maxlength="2" placeholder="01"></td>
+      <td><input name="cClassTrib" inputmode="numeric" maxlength="6" placeholder="000001" required></td>
+      <td><input name="baseCalculo" inputmode="decimal" placeholder="1000,00" required></td>
+      <td><input name="valorImpostoSeletivo" inputmode="decimal" placeholder="0,00"></td>
+      <td><input name="pIBSSN" inputmode="decimal" placeholder="1,25"></td>
+      <td><input name="pCBSSN" inputmode="decimal" placeholder="2,75"></td>
+      <td><button type="button" class="remover" aria-label="Remover item">×</button></td>
+    </tr>
+  </template>
+  <script src="app.js" type="module"></script>
+</body>
+</html>
