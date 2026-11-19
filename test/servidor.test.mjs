@@ -162,3 +162,9 @@ test('aceita só o tipo application/json exato (com charset opcional)', async ()
   const r2 = await chamar('/api/simulacoes', { method: 'POST', corpo, headers: { 'content-type': 'application/json; charset=utf-8' } });
   assert.equal(r2.status, 422);
 });
+
+test('o servidor não serve o modo demonstração (demo.js) nem marca a página como demo', async () => {
+  assert.equal((await chamar('/demo.js')).status, 404);
+  const r = await chamar('/');
+  assert.doesNotMatch(r.txt, /data-modo="demo"/);
+});

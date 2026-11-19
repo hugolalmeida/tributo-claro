@@ -26,7 +26,13 @@ function el(tag, attrs = {}, ...filhos) {
   return e;
 }
 
+// Modo demonstração: página estática (GitHub Pages), sem servidor nem motor.
+const DEMO = document.documentElement.dataset.modo === 'demo';
+const apiDemo = DEMO ? (await import('./demo.js')).apiDemo : null;
+if (DEMO) $('#aviso-demo').hidden = false;
+
 async function api(caminho, opcoes) {
+  if (DEMO) return apiDemo(caminho, opcoes);
   const resp = await fetch(caminho, opcoes);
   let corpo = null;
   try { corpo = await resp.json(); } catch { /* sem corpo */ }
@@ -71,6 +77,10 @@ async function carregarAtividades() {
     lista.append(el('option', { value: a.codigo }, `${a.codigo} · ${a.descricao}${a.anexo ? ` (${a.anexo})` : ''}`));
   }
   const n = lista.children.length;
+  if (DEMO) {
+    dica.textContent = 'Na demonstração, a lista oficial de atividades não está disponível. Digite qualquer código de 2 dígitos (ex.: 01) para simular um item calculado, ou deixe em branco para ver um item "não calculado".';
+    return;
+  }
   dica.textContent = n === 0
     ? 'Nenhuma atividade vigente nesta data para este documento.'
     : `${n} ${n === 1 ? 'atividade vigente' : 'atividades vigentes'} nesta data para este documento. Comece a digitar no campo Atividade.`;
@@ -103,7 +113,7 @@ function mostrarResultado(r) {
   const res = r.resultado || {};
   const situacao = r.situacao || res.situacao;
 
-  alvo.append(el('p', { class: `selo selo-${situacao}` }, `Simulação · ${SITUACOES[situacao] || situacao}`));
+  alvo.append(el('p', { class: `selo selo-${situacao}` }, `${DEMO ? "Simulação ilustrativa (demonstração)" : "Simulação"} · ${SITUACOES[situacao] || situacao}`));
 
   if (situacao === 'rejeitada') {
     alvo.append(el('p', {}, 'O motor recusou a operação inteira. Corrija os pontos abaixo e simule de novo.'));
@@ -135,7 +145,7 @@ function mostrarResultado(r) {
       el('dt', {}, 'IBS simulado'), el('dd', {}, dinheiro(tot.vIBSSNtot)),
       el('dt', {}, 'CBS simulada'), el('dd', {}, dinheiro(tot.vCBSSNtot)),
       el('dt', {}, 'Imposto Seletivo (repassado)'), el('dd', {}, dinheiro(tot.totalIs)),
-      el('dt', {}, 'Total simulado'), el('dd', { class: 'destaque' }, dinheiro(tot.totalTributos))));
+      el('dt', {}, DEMO ? 'Total simulado (ilustrativo)' : 'Total simulado'), el('dd', { class: 'destaque' }, dinheiro(tot.totalTributos))));
     if (situacao !== 'completo') {
       alvo.append(el('p', { class: 'alerta' }, 'Os totais somam só os itens calculados. Itens com outra situação ficaram de fora.'));
     }
