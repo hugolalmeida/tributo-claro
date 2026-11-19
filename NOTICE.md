@@ -20,6 +20,21 @@ As dependências Maven do motor têm licenças próprias. A montagem da imagem g
 `/motor/licencas/THIRD-PARTY.txt`, e o CI guarda essa lista como artefato `licencas-motor`.
 Dependência com licença GPL, LGPL ou AGPL precisa de avaliação antes do merge.
 
+### Dependências com licença dupla: escolha da EPL-2.0
+
+No relatório de 19/11/2026 (CI run 44596081003), as únicas dependências que citam GPL ou LGPL têm licença
+dupla. Elas são usadas sob a **Eclipse Public License 2.0**, mantidos os avisos de copyright e de licença
+(avaliado e aprovado pelo Cleber em 19/11/2026):
+
+| Dependência | Versão | Licenças oferecidas | Usada sob |
+|---|---|---|---|
+| jakarta.transaction:jakarta.transaction-api | 2.0.1 | EPL 2.0 ou GPL2 com Classpath Exception | EPL-2.0 |
+| jakarta.annotation:jakarta.annotation-api | 2.1.1 | EPL 2.0 ou GPL2 com Classpath Exception | EPL-2.0 |
+| ch.qos.logback:logback-core | 1.5.34 | EPL-2.0 ou LGPL-2.1-only | EPL-2.0 |
+| ch.qos.logback:logback-classic | 1.5.34 | EPL-2.0 ou LGPL-2.1-only | EPL-2.0 |
+
+Ao atualizar o motor, confira de novo o relatório. Licença sem alternativa permissiva volta para avaliação.
+
 ## Imagens-base (Docker Hub, library)
 
 - `eclipse-temurin` (OpenJDK, GPLv2 com Classpath Exception): JDK 21 só na etapa de build; JRE 21 alpine na execução do motor.
