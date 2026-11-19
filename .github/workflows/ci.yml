@@ -1,0 +1,95 @@
+# Testes do app e teste de ponta a ponta com o motor real da Receita.
+# Só dados fictícios. Nada é publicado: o relatório de licenças fica como artefato do job.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  testes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm test
+
+  motor-real:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Monta e sobe app + motor
+        run: docker compose up -d --build --wait --wait-timeout 300
+
+      - name: Simulação com dados fictícios pelo app
+        run: |
+          set -euo pipefail
+          B=http://localhost:3000
+          curl -fsS "$B/api/atividades?data=2027-03-15&tpDoc=55" -o atividades.json
+          echo "atividades admissíveis: $(jq '[.[] | select(.admissivel)] | length' atividades.json)"
+          ATIV=$(jq -r '[.[] | select(.admissivel)][0].codigo' atividades.json)
+          test -n "$ATIV" && test "$ATIV" != "null"
+          jq -n --arg a "$ATIV" '{data:"2027-03-15", tpDoc:"55", regime:"simples", itens:[
+            {cAtivSN:$a, cClassTrib:"000001", baseCalculo:"1000.00", pIBSSN:"1.25", pCBSSN:"2.75"},
+            {cClassTrib:"000001", baseCalculo:"500.00"}]}' > entrada.json
+          STATUS=$(curl -sS -o resposta.json -w '%{http_code}' -H 'content-type: application/json' --data @entrada.json "$B/api/simulacoes")
+          jq . resposta.json
+          test "$STATUS" = "200"
+          jq -e '.resultado.itens | length == 2' resposta.json
+          jq -e '.resultado.itens[1].estado == "NAO_CALCULADO"' resposta.json
+          jq -e '.versaoMotor.app != null and .versaoMotor.banco != null' resposta.json
+          curl -fsS "$B/api/simulacoes" | jq -e 'length >= 1'
+
+      - name: Motor não tem porta publicada no host
+        run: |
+          test -z "$(docker compose port motor 8082 2>/dev/null || true)"
+          ! curl -s --max-time 3 http://localhost:8082/api/versao
+
+      - name: Relatório de licenças das dependências do motor
+        if: always()
+        run: |
+          mkdir -p licencas
+          docker compose cp motor:/motor/licencas/. licencas/ || true
+          ls -la licencas
+          # Cada linha com GPL vira um aviso público (os logs do Actions exigem login).
+          grep -iE 'GPL' licencas/THIRD-PARTY.txt | head -20 | while IFS= read -r l; do
+            echo "::warning title=Licença GPL/LGPL/AGPL (levar ao Cleber)::$(echo "$l" | sed 's/^ *//')"
+          done || true
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: licencas-motor
+          path: licencas/
+          retention-days: 30
+
+      - name: Logs em caso de falha
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --tail 200
+          # Resumo público dos logs (os logs do Actions exigem login).
+          for s in motor app; do
+            docker compose logs --no-color --tail 400 "$s" 2>/dev/null               | grep -iE 'error|exception|caused by|unsatisfied|failed|denied' | grep -v DEBUG | head -8               | while IFS= read -r l; do echo "::error title=$s::$(echo "$l" | cut -c1-400)"; done || true
+          done
+
+      - name: Derruba
+        if: always()
+        run: docker compose down -v
