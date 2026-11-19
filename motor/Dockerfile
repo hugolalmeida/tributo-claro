@@ -25,6 +25,8 @@ RUN set -eu; \
     buscar rr calculadora-rtc-regime-regular "$RR_COMMIT"
 
 WORKDIR /src/sn
+# Gera o banco, compila o jar (o spring-boot-maven-plugin deixa o devtools de fora por padrão)
+# e grava o relatório das licenças das dependências do jar (sem test/provided) em /motor/licencas.
 RUN cp -r ../rr/flyway ./flyway \
  && mkdir -p calculadora/db \
  && chmod +x mvnw \
@@ -32,6 +34,10 @@ RUN cp -r ../rr/flyway ./flyway \
  && test -s calculadora/db/calculadora-pro.db \
  && ./mvnw -q -B -DskipTests package \
  && mkdir -p /out/calculadora/db /out/licencas \
+ && ./mvnw -q -B org.codehaus.mojo:license-maven-plugin:2.9.0:add-third-party \
+      -Dlicense.excludedScopes=test,provided,system \
+      -Dlicense.outputDirectory=/out/licencas -Dlicense.thirdPartyFilename=THIRD-PARTY.txt \
+ && test -s /out/licencas/THIRD-PARTY.txt \
  && cp target/api-simples-nacional.jar /out/app.jar \
  && cp calculadora/db/calculadora-pro.db /out/calculadora/db/ \
  && cp LICENSE /out/licencas/LICENSE-calculadora-rtc-simples-nacional \

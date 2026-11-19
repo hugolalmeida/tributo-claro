@@ -13,7 +13,16 @@
 - Licença: MIT, Copyright (c) 2026 Receita Federal do Brasil
 
 Nenhum código desses projetos é copiado para este repositório. A imagem `motor/` os compila a partir da
-fonte oficial e guarda o texto integral das licenças em `/motor/licencas/`. As dependências desses projetos
-têm licenças próprias, declaradas nos respectivos `pom.xml`.
+fonte oficial e guarda o texto integral das licenças em `/motor/licencas/`.
+
+As dependências Maven do motor têm licenças próprias. A montagem da imagem gera a lista delas
+(`license-maven-plugin` 2.9.0, modo relatório, sem dependências de teste/provided) em
+`/motor/licencas/THIRD-PARTY.txt`, e o CI guarda essa lista como artefato `licencas-motor`.
+Dependência com licença GPL, LGPL ou AGPL precisa de avaliação antes do merge.
+
+## Imagens-base (Docker Hub, library)
+
+- `eclipse-temurin` (OpenJDK, GPLv2 com Classpath Exception): JDK 21 só na etapa de build; JRE 21 alpine na execução do motor.
+- `node:24-alpine`: execução do app.
 
 O uso desses componentes não implica endosso, homologação ou chancela da Receita Federal do Brasil.
