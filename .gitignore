@@ -1,0 +1,10 @@
+node_modules/
+dados/
+*.db
+*.db-*
+.env
+.env.*
+*.pem
+*.key
+*.tar
+.DS_Store
