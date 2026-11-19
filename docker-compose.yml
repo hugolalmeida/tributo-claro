@@ -7,7 +7,9 @@ services:
     build: ./motor
     networks: [interna]
     read_only: true
-    tmpfs: [/tmp]
+    # exec: o sqlite-jdbc extrai e carrega a biblioteca nativa a partir do /tmp (revisão do Stark, A-1)
+    tmpfs:
+      - /tmp:exec,size=64m
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     mem_limit: 768m

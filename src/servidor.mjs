@@ -101,14 +101,20 @@ export function criarServidor({ motor, historico, hostsPermitidos }) {
     }
 
     if (req.method === 'POST' && rota === '/api/simulacoes') {
-      if (!(req.headers['content-type'] || '').toLowerCase().startsWith('application/json')) {
+      const tipoMidia = (req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+      if (tipoMidia !== 'application/json') {
         return enviar(res, 415, { erro: 'Envie application/json.' });
       }
       let corpo;
       try {
         corpo = JSON.parse(await lerCorpo(req));
       } catch (e) {
-        return enviar(res, e.status === 413 ? 413 : 400, { erro: e.status === 413 ? 'Entrada grande demais.' : 'JSON inválido.' });
+        if (e.status === 413) {
+          // depois de responder, encerra a conexão para não continuar recebendo o corpo
+          res.on('finish', () => req.destroy());
+          return enviar(res, 413, { erro: 'Entrada grande demais.' });
+        }
+        return enviar(res, 400, { erro: 'JSON inválido.' });
       }
       const v = validarEntrada(corpo);
       if (!v.ok) return enviar(res, 422, { erro: 'Entrada inválida.', erros: v.erros });

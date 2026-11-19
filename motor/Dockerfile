@@ -4,18 +4,28 @@
 # do motor). Nada do código do motor é copiado para este repositório.
 #
 # Para atualizar o motor: troque os dois commits abaixo, leia o changelog/contrato
-# e rode de novo os testes e a conferência do docs/OPERACAO.md.
+# e rode de novo os testes e o CI (simulação com o motor real).
 
 FROM eclipse-temurin:21-jdk-noble@sha256:a2e61ec9e2e4d5c7aa885412400319f9299abe4d8189f42ec3bec48708c576a6 AS build
 
-# calculadora-rtc-simples-nacional, main em 27/10/2026
+# calculadora-rtc-simples-nacional, commit de 27/10/2026
 ARG SN_COMMIT=c5b0f01c8351c3f0d0795cc617b29d233e9f98df
-# calculadora-rtc-regime-regular (scripts Flyway do banco), main em 19/11/2026
+# calculadora-rtc-regime-regular (scripts Flyway do banco), commit de 22/10/2026
 ARG RR_COMMIT=150cccbe414d4a5edea703e4f7a424af5aa222c7
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git ca-certificates \
+ && apt-get install -y --no-install-recommends git ca-certificates curl unzip \
  && rm -rf /var/lib/apt/lists/*
+
+# Maven baixado do Maven Central e conferido pelo SHA-256 (validado contra o .sha512 oficial em 19/11/2026),
+# no lugar do mvnw, que baixa sem conferir. Mesma versão do .mvn/wrapper do motor.
+ARG MAVEN_VERSAO=3.9.5
+ARG MAVEN_SHA256=7822eb593d29558d8edf87845a2c47e36e2a89d17a84cd2390824633214ed423
+RUN curl -fsSL -o /tmp/maven.zip "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSAO}/apache-maven-${MAVEN_VERSAO}-bin.zip" \
+ && echo "${MAVEN_SHA256}  /tmp/maven.zip" | sha256sum -c - \
+ && unzip -q /tmp/maven.zip -d /opt \
+ && ln -s "/opt/apache-maven-${MAVEN_VERSAO}/bin/mvn" /usr/local/bin/mvn \
+ && rm /tmp/maven.zip
 
 WORKDIR /src
 RUN set -eu; \
@@ -29,12 +39,11 @@ WORKDIR /src/sn
 # e grava o relatório das licenças das dependências do jar (sem test/provided) em /motor/licencas.
 RUN cp -r ../rr/flyway ./flyway \
  && mkdir -p calculadora/db \
- && chmod +x mvnw \
- && ./mvnw -q -B flyway:migrate -Dflyway.configFiles=./flyway/flyway-pro.conf \
+ && mvn -q -B flyway:migrate -Dflyway.configFiles=./flyway/flyway-pro.conf \
  && test -s calculadora/db/calculadora-pro.db \
- && ./mvnw -q -B -DskipTests package \
+ && mvn -q -B -DskipTests package \
  && mkdir -p /out/calculadora/db /out/licencas \
- && ./mvnw -q -B org.codehaus.mojo:license-maven-plugin:2.9.0:add-third-party \
+ && mvn -q -B org.codehaus.mojo:license-maven-plugin:2.9.0:add-third-party \
       -Dlicense.excludedScopes=test,provided,system \
       -Dlicense.outputDirectory=/out/licencas -Dlicense.thirdPartyFilename=THIRD-PARTY.txt \
  && test -s /out/licencas/THIRD-PARTY.txt \

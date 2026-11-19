@@ -154,3 +154,11 @@ test('404 para rotas e ids desconhecidos, sem acesso a arquivos fora da lista', 
   assert.equal((await chamar('/../package.json')).status, 404);
   assert.equal((await chamar('/%2e%2e/src/app.mjs')).status, 404);
 });
+
+test('aceita só o tipo application/json exato (com charset opcional)', async () => {
+  const corpo = JSON.stringify(entrada([{ cClassTrib: 'x', baseCalculo: '1' }]));
+  const r1 = await chamar('/api/simulacoes', { method: 'POST', corpo, headers: { 'content-type': 'application/jsonx' } });
+  assert.equal(r1.status, 415);
+  const r2 = await chamar('/api/simulacoes', { method: 'POST', corpo, headers: { 'content-type': 'application/json; charset=utf-8' } });
+  assert.equal(r2.status, 422);
+});

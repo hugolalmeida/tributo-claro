@@ -66,3 +66,15 @@ test('interpreta HTTP 200 olhando o estado de cada item', () => {
   assert.equal(interpretar({ objetos: [] }).situacao, 'nenhum-calculado');
   assert.equal(interpretar({ objetos: [{ estadoItem: 'NAO_CALCULADO' }] }).situacao, 'nenhum-calculado');
 });
+
+test('histórico respeita o teto e mantém as mais recentes', async () => {
+  const { abrirHistorico } = await import('../src/historico.mjs');
+  const h = abrirHistorico(':memory:', { maxSimulacoes: 3 });
+  const ids = [];
+  for (let i = 0; i < 5; i++) ids.push(h.salvar({ situacao: 'completo', entrada: { n: i } }).id);
+  const lista = h.listar(10);
+  assert.equal(lista.length, 3);
+  assert.equal(h.buscar(ids[0]), null);
+  assert.ok(h.buscar(ids[4]));
+  h.fechar();
+});

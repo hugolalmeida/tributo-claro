@@ -83,7 +83,9 @@ e não da documentação de exemplos, que em parte se refere ao Regime Regular. 
 ## Segurança
 
 - **Sem login nesta versão.** Use só no próprio computador. Para expor em rede ou na internet, é preciso
-  antes autenticação, HTTPS e limite de requisições.
+  antes autenticação, HTTPS, limite de requisições e histórico separado por usuário (hoje quem abre a tela
+  vê as 50 últimas simulações).
+- O histórico guarda no máximo 1.000 simulações; as mais antigas são apagadas.
 - Só aceita requisições com `Host`/`Origin` da lista permitida (proteção contra DNS rebinding e contra outros sites).
 - O `POST` exige `application/json` e limita o corpo a 64 KB.
 - CSP restritiva, sem script inline; a tela insere texto só por `textContent`.

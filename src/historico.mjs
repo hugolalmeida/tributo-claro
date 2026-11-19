@@ -7,7 +7,10 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
-export function abrirHistorico(caminho) {
+// Teto do histórico: ao passar disso, as simulações mais antigas são apagadas.
+export const MAX_SIMULACOES = 1000;
+
+export function abrirHistorico(caminho, { maxSimulacoes = MAX_SIMULACOES } = {}) {
   if (caminho !== ':memory:') mkdirSync(dirname(caminho), { recursive: true });
   const db = new DatabaseSync(caminho);
   db.exec(`
@@ -33,6 +36,8 @@ export function abrirHistorico(caminho) {
   const listar = db.prepare(`SELECT id, criado_em, situacao, versao_app_motor, versao_banco_motor, entrada, resultado
     FROM simulacoes ORDER BY criado_em DESC LIMIT ?`);
   const buscar = db.prepare('SELECT * FROM simulacoes WHERE id = ?');
+  const podar = db.prepare(`DELETE FROM simulacoes WHERE id NOT IN
+    (SELECT id FROM simulacoes ORDER BY criado_em DESC, rowid DESC LIMIT ?)`);
 
   const json = (v) => (v === undefined || v === null ? null : JSON.stringify(v));
   const ler = (v) => (v ? JSON.parse(v) : null);
@@ -43,6 +48,7 @@ export function abrirHistorico(caminho) {
       const criadoEm = new Date().toISOString();
       inserir.run(id, criadoEm, situacao, httpStatus, versao.app ?? null, versao.banco ?? null,
         json(entrada), json(payload), json(resposta), json(resultado));
+      podar.run(maxSimulacoes);
       return { id, criadoEm };
     },
     listar(limite = 50) {
