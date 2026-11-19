@@ -1,0 +1,41 @@
+# Uso local: docker compose up --build  ->  http://localhost:3000
+# O motor fica numa rede interna, sem porta no host e sem saída para a internet.
+# O app só é publicado em 127.0.0.1 (não aparece para a rede local).
+
+services:
+  motor:
+    build: ./motor
+    networks: [interna]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 768m
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      motor:
+        condition: service_healthy
+    environment:
+      MOTOR_URL: http://motor:8082/api
+      HOSTS_PERMITIDOS: localhost:3000,127.0.0.1:3000
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - historico:/dados
+    networks: [interna, publica]
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 256m
+    restart: unless-stopped
+
+networks:
+  interna:
+    internal: true
+  publica: {}
+
+volumes:
+  historico: {}

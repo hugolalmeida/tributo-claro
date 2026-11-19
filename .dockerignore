@@ -1,0 +1,13 @@
+.git
+node_modules
+dados
+test
+docs
+motor
+*.db
+*.db-*
+.env
+.env.*
+*.pem
+*.key
+*.tar
