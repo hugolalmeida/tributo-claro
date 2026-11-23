@@ -46,6 +46,9 @@ oficial num commit fixado e as dependências Maven.
 docker compose up --build
 ```
 
+A imagem do app só monta pelo `docker compose`: ela copia o banco da imagem do motor (contexto adicional
+`motor: service:motor`) para gerar a lista de cClassTrib. Um `docker build .` direto falha nesse passo, de propósito.
+
 Abra http://localhost:3000. A primeira montagem do motor leva alguns minutos.
 
 - O motor fica numa rede interna, sem porta no computador e sem saída para a internet.

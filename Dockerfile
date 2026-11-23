@@ -1,6 +1,8 @@
 # App do simulador (Node, sem dependências externas).
 # Monte pelo docker compose: o estágio "catalogo" lê o banco da imagem do motor
 # (contexto adicional "motor" = serviço motor do compose) e gera a lista de cClassTrib.
+# Use "docker compose build". Um "docker build ." direto falha no COPY --from=motor, porque o
+# contexto "motor" não existe fora do compose (o Docker procuraria uma imagem chamada "motor").
 
 FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS catalogo
 WORKDIR /x

@@ -46,9 +46,12 @@ export function carregarCatalogo({ arquivo, arquivoMaisUsados } = {}) {
             tipoReceita: tipo ? tipo.descricao : null,
             fatorReceita: tipo ? tipo.fator : null,
             maisUsado: destaque.has(c.codigo),
+            // o motor responde NAO_IMPLEMENTADO para este código nesta data (tratamento com ajuste)
+            naoImplementado: (c.naoImplementado || []).some((p) => vigente(p, data)),
           };
         })
-        .sort((a, b) => (Number(b.maisUsado) - Number(a.maisUsado)) || a.codigo.localeCompare(b.codigo));
+        .sort((a, b) => (Number(a.naoImplementado) - Number(b.naoImplementado))
+          || (Number(b.maisUsado) - Number(a.maisUsado)) || a.codigo.localeCompare(b.codigo));
     },
   };
 }

@@ -70,8 +70,10 @@ function descreverClassificacao(campo) {
     const receita = c.tipoReceita
       ? ` · Receita bruta: ${c.tipoReceita}${c.fatorReceita === null ? '' : ` (base de IBS/CBS: ${pctFator(c.fatorReceita)} da receita)`}`
       : '';
-    desc.textContent = `${c.descricao}${receita}`;
-  } else if (/^d{6}$/.test(v)) {
+    const aviso = c.naoImplementado ? 'Atenção: o motor da Receita ainda não calcula este código nesta data (o item sairá "não implementado"). ' : '';
+    desc.textContent = `${aviso}${c.descricao}${receita}`;
+    if (c.naoImplementado) desc.classList.add('erro');
+  } else if (/^\d{6}$/.test(v)) {
     desc.textContent = 'Código fora da lista oficial para esta data e este documento.';
     desc.classList.add('erro');
   } else {
@@ -100,7 +102,7 @@ async function carregarClassificacoes() {
   for (const c of corpo.itens) {
     classificacoes.set(c.codigo, c);
     const resumo = c.descricao.length > 110 ? `${c.descricao.slice(0, 107)}...` : c.descricao;
-    lista.append(el('option', { value: c.codigo }, `${c.maisUsado ? 'Mais usado pela C&S · ' : ''}${c.codigo} · ${resumo}`));
+    lista.append(el('option', { value: c.codigo }, `${c.maisUsado ? 'Mais usado pela C&S · ' : ''}${c.codigo} · ${resumo}${c.naoImplementado ? ' (o motor ainda não calcula)' : ''}`));
   }
   const n = classificacoes.size;
   dica.textContent = n === 0
