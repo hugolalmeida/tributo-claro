@@ -78,7 +78,7 @@ async function carregarAtividades() {
   }
   const n = lista.children.length;
   if (DEMO) {
-    dica.textContent = 'Na demonstração, a lista oficial de atividades não está disponível. Digite qualquer código de 2 dígitos (ex.: 01) para simular um item calculado, ou deixe em branco para ver um item "não calculado".';
+    dica.textContent = 'Na demonstração, Atividade e cClassTrib são opcionais: a conta ilustrativa usa só o valor do item e as alíquotas de IBS e CBS que você digitar. Na versão completa, os dois códigos são obrigatórios e vêm das tabelas oficiais. O texto cinza em cada campo é só exemplo.';
     return;
   }
   dica.textContent = n === 0
