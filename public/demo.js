@@ -23,7 +23,9 @@ function simular(e) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(e.data || '')) erros.push({ campo: 'data', mensagem: 'Informe a data da operação.' });
   if (!Array.isArray(e.itens) || !e.itens.length) erros.push({ campo: 'itens', mensagem: 'Informe ao menos um item.' });
   (e.itens || []).forEach((it, i) => {
-    if (!/^\d{6}$/.test(it.cClassTrib || '')) erros.push({ campo: `itens[${i}].cClassTrib`, mensagem: 'cClassTrib deve ter 6 dígitos.' });
+    // Na demonstração os códigos são opcionais (a conta ilustrativa não os usa); se vierem, o formato é conferido.
+    if (it.cClassTrib && !/^\d{6}$/.test(it.cClassTrib)) erros.push({ campo: `itens[${i}].cClassTrib`, mensagem: 'cClassTrib deve ter 6 dígitos (ou deixe em branco na demonstração).' });
+    if (it.cAtivSN && !/^\d{2}$/.test(it.cAtivSN)) erros.push({ campo: `itens[${i}].cAtivSN`, mensagem: 'Atividade deve ter 2 dígitos (ou deixe em branco na demonstração).' });
     const b = num(it.baseCalculo);
     if (b === null || b < 0) erros.push({ campo: `itens[${i}].baseCalculo`, mensagem: 'Valor do item inválido.' });
   });
@@ -31,9 +33,10 @@ function simular(e) {
 
   const itens = e.itens.map((it, i) => {
     const base = num(it.baseCalculo);
-    if (!it.cAtivSN) {
+    // Gatilho só da demonstração para mostrar o estado NAO_CALCULADO do motor real (atividade não admitida).
+    if (it.cAtivSN === '99') {
       return { numero: i + 1, estado: 'NAO_CALCULADO', calculado: false,
-        rotulo: 'Não calculado: atividade ausente, fora de vigência ou não admitida no documento',
+        rotulo: 'Não calculado (ilustrativo): atividade ausente, fora de vigência ou não admitida no documento',
         tributos: { vRBSNitem: dois(base) }, erros: [] };
     }
     const pIBS = num(it.pIBSSN);
@@ -45,7 +48,12 @@ function simular(e) {
     const vIBS = dois(base * pIBS / 100);
     const vCBS = dois(base * pCBS / 100);
     const is = num(it.valorImpostoSeletivo) || 0;
-    return { numero: i + 1, estado: 'CALCULADO', calculado: true, rotulo: 'Calculado (ilustrativo)', erros: [],
+    // Sem os códigos, a versão completa (motor da Receita) não calcularia o item: isso fica dito no rótulo.
+    const semCodigos = !it.cAtivSN || !it.cClassTrib;
+    const rotulo = semCodigos
+      ? 'Calculado (ilustrativo). Sem atividade/cClassTrib: na versão completa, estes códigos são obrigatórios'
+      : 'Calculado (ilustrativo)';
+    return { numero: i + 1, estado: 'CALCULADO', calculado: true, rotulo, erros: [],
       tributos: { vRBSNitem: dois(base), vBC: dois(base), pIBSSN: String(pIBS), vIBSSN: vIBS, pCBSSN: String(pCBS), vCBSSN: vCBS,
         IS: is ? { valor: dois(is) } : undefined, totalItem: dois(Number(vIBS) + Number(vCBS) + is) } };
   });
