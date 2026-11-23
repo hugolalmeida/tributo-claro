@@ -43,7 +43,7 @@ test('sem catálogo, responde indisponível e lista vazia', async () => {
 
 test('serve as fontes locais com o tipo certo', async () => {
   const base = await subir(null);
-  const r = await fetch(`${base}/fontes/poppins-latin-600-normal.woff2`);
+  const r = await fetch(`${base}/fontes/manrope-latin-600-normal.woff2`);
   assert.equal(r.status, 200);
   assert.equal(r.headers.get('content-type'), 'font/woff2');
   assert.match(r.headers.get('content-security-policy'), /font-src 'self'/);
