@@ -17,10 +17,11 @@ const ARQUIVOS = {
   '/': ['index.html', 'text/html; charset=utf-8'],
   '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
   '/estilo.css': ['estilo.css', 'text/css; charset=utf-8'],
+  ...Object.fromEntries([400, 600, 700].map((p) => [`/fontes/poppins-latin-${p}-normal.woff2`, [`fontes/poppins-latin-${p}-normal.woff2`, 'font/woff2']])),
 };
 
 const CABECALHOS_SEGURANCA = {
-  'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+  'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'no-referrer',
   'x-frame-options': 'DENY',
@@ -57,7 +58,7 @@ function lerCorpo(req) {
   });
 }
 
-export function criarServidor({ motor, historico, hostsPermitidos }) {
+export function criarServidor({ motor, historico, hostsPermitidos, catalogo = null }) {
   const hosts = new Set(hostsPermitidos.map((h) => h.toLowerCase()));
   const estaticos = Object.fromEntries(Object.entries(ARQUIVOS).map(([rota, [arq, tipo]]) =>
     [rota, { conteudo: readFileSync(join(PASTA_PUBLICA, arq)), tipo }]));
@@ -82,6 +83,16 @@ export function criarServidor({ motor, historico, hostsPermitidos }) {
     }
 
     if (req.method === 'GET' && rota === '/api/saude') return enviar(res, 200, { ok: true });
+
+    if (req.method === 'GET' && rota === '/api/classificacoes') {
+      const data = url.searchParams.get('data') || '';
+      const tpDoc = url.searchParams.get('tpDoc') || '';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || (tpDoc && !/^(55|65)$/.test(tpDoc))) {
+        return enviar(res, 400, { erro: 'Parâmetros inválidos.' });
+      }
+      if (!catalogo || !catalogo.disponivel) return enviar(res, 200, { disponivel: false, itens: [] });
+      return enviar(res, 200, { disponivel: true, geradoEm: catalogo.geradoEm, itens: catalogo.listar({ data, tpDoc }) });
+    }
 
     if (req.method === 'GET' && rota === '/api/regimes') {
       return enviar(res, 200, Object.entries(REGIMES).map(([id, r]) => ({ id, rotulo: r.rotulo })));

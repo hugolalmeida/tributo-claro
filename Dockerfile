@@ -1,9 +1,22 @@
 # App do simulador (Node, sem dependências externas).
+# Monte pelo docker compose: o estágio "catalogo" lê o banco da imagem do motor
+# (contexto adicional "motor" = serviço motor do compose) e gera a lista de cClassTrib.
+# Use "docker compose build". Um "docker build ." direto falha no COPY --from=motor, porque o
+# contexto "motor" não existe fora do compose (o Docker procuraria uma imagem chamada "motor").
+
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS catalogo
+WORKDIR /x
+COPY --from=motor /motor/calculadora/db/calculadora-pro.db ./motor.db
+COPY scripts/extrair-catalogo.mjs ./
+RUN node --disable-warning=ExperimentalWarning extrair-catalogo.mjs motor.db catalogo.json
+
 FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 WORKDIR /app
 COPY package.json ./
 COPY src ./src
 COPY public ./public
+COPY config ./config
+COPY --from=catalogo /x/catalogo.json ./dados-motor/catalogo.json
 # Sem dependências: npm, npx, yarn e corepack não são necessários em execução.
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
       /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn /usr/local/bin/yarnpkg /usr/local/bin/corepack /opt/yarn* \

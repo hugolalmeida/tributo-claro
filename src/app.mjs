@@ -2,6 +2,7 @@
 import { criarServidor } from './servidor.mjs';
 import { criarClienteMotor } from './motor.mjs';
 import { abrirHistorico } from './historico.mjs';
+import { carregarCatalogo } from './catalogo.mjs';
 
 const HOST = process.env.HOST || '127.0.0.1';
 const PORTA = Number(process.env.PORTA || 3000);
@@ -11,7 +12,14 @@ const HOSTS = (process.env.HOSTS_PERMITIDOS || `localhost:${PORTA},127.0.0.1:${P
   .split(',').map((h) => h.trim()).filter(Boolean);
 
 const historico = abrirHistorico(HISTORICO);
+const catalogo = carregarCatalogo({
+  arquivo: process.env.CATALOGO_ARQUIVO || './dados-motor/catalogo.json',
+  arquivoMaisUsados: process.env.MAIS_USADOS_ARQUIVO || './config/mais-usados.json',
+});
+console.log(catalogo.disponivel ? `catálogo de cClassTrib carregado (gerado em ${catalogo.geradoEm})` : 'catálogo de cClassTrib ausente: o campo fica livre');
+
 const servidor = criarServidor({
+  catalogo,
   motor: criarClienteMotor({ url: MOTOR_URL }),
   historico,
   hostsPermitidos: HOSTS,

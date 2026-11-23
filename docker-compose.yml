@@ -16,7 +16,11 @@ services:
     restart: unless-stopped
 
   app:
-    build: .
+    build:
+      context: .
+      # a lista de cClassTrib é gerada a partir do banco da imagem do motor
+      additional_contexts:
+        motor: service:motor
     depends_on:
       motor:
         condition: service_healthy
