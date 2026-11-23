@@ -25,6 +25,18 @@ de cada cálculo, os avisos do motor e a versão do motor e das tabelas usadas. 
 Login e usuários, cadastro de empresas, importação de XML, Regime Regular, DANFSe, emissão ou transmissão de
 qualquer documento, apuração, guias e pagamentos.
 
+## Lista oficial de cClassTrib
+
+Quem não conhece os códigos escolhe o cClassTrib numa lista com descrição. A lista vem da tabela oficial
+`CLASSIFICACAO_TRIBUTARIA` do banco do motor e usa o mesmo filtro do motor: só IBS/CBS, vigente na data da
+operação e admitida no tipo de documento. Cada código mostra também o tipo de receita bruta e quanto da receita
+entra na base de IBS/CBS, conforme a tabela `TIPO_RECEITA_BRUTA_SIMPLES_NACIONAL`.
+
+- A lista é gerada na montagem da imagem (`scripts/extrair-catalogo.mjs`), a partir do banco da imagem do motor,
+  e por isso acompanha a versão do motor. Fora do Docker, sem o arquivo, o campo fica livre.
+- `config/mais-usados.json`: lista opcional de códigos destacados no topo como "Mais usado pela C&S". Começa
+  vazia, e só entram códigos indicados pelo responsável técnico; código que não está na tabela oficial é ignorado.
+
 ## Como rodar (Docker)
 
 Precisa de Docker com Compose e de internet na **primeira** montagem: a imagem do motor baixa o código

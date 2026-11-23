@@ -8,8 +8,11 @@
 </head>
 <body>
   <header class="topo">
-    <h1>Tributo Claro</h1>
-    <p>Simulador de CBS e IBS para empresas do Simples Nacional (Reforma Tributária, LC 214/2025)</p>
+    <div class="topo-conteudo">
+      <p class="sobretitulo">Reforma Tributária do Consumo · LC 214/2025</p>
+      <h1>Tributo Claro</h1>
+      <p class="subtitulo">Simulador de CBS e IBS por item para empresas do Simples Nacional</p>
+    </div>
   </header>
 
   <aside class="aviso aviso-demo" id="aviso-demo" role="note" hidden>
@@ -54,11 +57,13 @@
       <fieldset>
         <legend>Itens</legend>
         <datalist id="lista-atividades"></datalist>
+        <datalist id="lista-classtrib"></datalist>
         <p class="dica" id="dica-atividades">Escolha a data para carregar as atividades do Simples Nacional.</p>
+        <p class="dica" id="dica-classtrib" hidden></p>
         <table class="itens">
           <thead>
             <tr>
-              <th>#</th><th>Atividade (cAtivSN)</th><th>cClassTrib</th><th>Valor do item (R$)</th>
+              <th>#</th><th>Atividade (cAtivSN)</th><th>Classificação (cClassTrib)</th><th>Valor do item (R$)</th>
               <th>Imposto Seletivo (R$)</th><th>Alíq. IBS (%)</th><th>Alíq. CBS (%)</th><th></th>
             </tr>
           </thead>
@@ -70,7 +75,7 @@
       </fieldset>
 
       <div class="acoes">
-        <button type="submit" id="simular">Simular</button>
+        <button type="submit" id="simular" class="primario">Simular</button>
         <span id="status" role="status" aria-live="polite"></span>
       </div>
     </form>
@@ -99,7 +104,7 @@
     <tr>
       <td class="num"></td>
       <td><input name="cAtivSN" list="lista-atividades" inputmode="numeric" maxlength="2" placeholder="ex.: 01"></td>
-      <td><input name="cClassTrib" inputmode="numeric" maxlength="6" placeholder="ex.: 000001" required></td>
+      <td class="celula-classtrib"><input name="cClassTrib" list="lista-classtrib" autocomplete="off" placeholder="ex.: 000001 ou parte da descrição" required><small class="desc" aria-live="polite"></small></td>
       <td><input name="baseCalculo" inputmode="decimal" placeholder="ex.: 1000,00" required></td>
       <td><input name="valorImpostoSeletivo" inputmode="decimal" placeholder="0,00"></td>
       <td><input name="pIBSSN" inputmode="decimal" placeholder="ex.: 1,25"></td>

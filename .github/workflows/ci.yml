@@ -57,6 +57,28 @@ jobs:
           jq -e '.versaoMotor.app != null and .versaoMotor.banco != null' resposta.json
           curl -fsS "$B/api/simulacoes" | jq -e 'length >= 1'
 
+      - name: Lista oficial de cClassTrib e simulação com um código dela
+        run: |
+          set -euo pipefail
+          B=http://localhost:3000
+          curl -fsS "$B/api/classificacoes?data=2027-03-15&tpDoc=55" -o classif.json
+          jq -e '.disponivel == true and (.itens | length) > 0' classif.json
+          N=$(jq '.itens | length' classif.json)
+          echo "::notice title=Catálogo cClassTrib::$N códigos vigentes em 2027-03-15 para NF-e (tabela do motor, gerado em $(jq -r .geradoEm classif.json))"
+          jq -c '.itens[:5][] | {codigo, tpRBSN, tipoReceita, fatorReceita, descricao: (.descricao[:80])}' classif.json
+          # um código de receita bruta integral (tpRBSN 1) e uma atividade compatível com ele, segundo o próprio motor
+          CT=$(jq -r '[.itens[] | select(.tpRBSN == 1)][0].codigo' classif.json)
+          test -n "$CT" && test "$CT" != "null"
+          ATIV=$(curl -fsS "http://localhost:3000/api/atividades?data=2027-03-15&tpDoc=55" | jq -r '[.[] | select(.admissivel)][0].codigo')
+          jq -n --arg a "$ATIV" --arg c "$CT" '{data:"2027-03-15", tpDoc:"55", regime:"simples", itens:[
+            {cAtivSN:$a, cClassTrib:$c, baseCalculo:"1000.00", pIBSSN:"1.25", pCBSSN:"2.75"}]}' > entrada2.json
+          STATUS=$(curl -sS -o resposta2.json -w '%{http_code}' -H 'content-type: application/json' --data @entrada2.json "$B/api/simulacoes")
+          jq -c '{status: '"$STATUS"', situacao: .resultado.situacao, itens: [.resultado.itens[]? | {estado, erros}], errosMotor}' resposta2.json
+          echo "::notice title=Simulação com cClassTrib da lista::cClassTrib $CT, atividade $ATIV, HTTP $STATUS, estado $(jq -r '.resultado.itens[0].estado // "rejeitada"' resposta2.json)"
+          test "$STATUS" = "200"
+          # o código veio da lista oficial: o motor não pode rejeitá-lo como cClassTrib desconhecido
+          jq -e '[.resultado.itens[0].erros[]?.pointer // empty] | map(select(test("cClassTrib"))) | length == 0' resposta2.json
+
       - name: Motor não tem porta publicada no host
         run: |
           test -z "$(docker compose port motor 8082 2>/dev/null || true)"
