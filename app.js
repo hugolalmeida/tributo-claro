@@ -29,7 +29,7 @@ function el(tag, attrs = {}, ...filhos) {
 // Modo demonstração: página estática (GitHub Pages), sem servidor nem motor.
 const DEMO = document.documentElement.dataset.modo === 'demo';
 const apiDemo = DEMO ? (await import('./demo.js')).apiDemo : null;
-if (DEMO) $('#aviso-demo').hidden = false;
+if (DEMO) { $('#aviso-demo').hidden = false; $('#aviso-demo-categorias').hidden = false; }
 
 async function api(caminho, opcoes) {
   if (DEMO) return apiDemo(caminho, opcoes);
@@ -155,6 +155,7 @@ function mostrarResultado(r) {
   alvo.append(el('p', { class: 'meta' },
     `Motor: versão ${v.app || 'não informada'} · base de dados ${v.banco || 'não informada'}`
     + (r.criadoEm ? ` · registrado em ${new Date(r.criadoEm).toLocaleString('pt-BR')}` : '')));
+  if (DEMO) alvo.append(el('p', { class: 'meta alerta-demo' }, 'Na demonstração, a categoria não altera o cálculo; o resultado vem só do valor e das alíquotas digitadas.'));
   alvo.append(el('p', { class: 'meta' }, 'Estimativa a partir dos dados informados. Não é apuração oficial nem valor a pagar.'));
   $('#resultado').hidden = false;
 }
