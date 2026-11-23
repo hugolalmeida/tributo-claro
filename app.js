@@ -78,7 +78,7 @@ async function carregarAtividades() {
   }
   const n = lista.children.length;
   if (DEMO) {
-    dica.textContent = 'Na demonstração, Atividade e cClassTrib são opcionais: a conta ilustrativa usa só o valor do item e as alíquotas de IBS e CBS que você digitar. Na versão completa, os dois códigos são obrigatórios e vêm das tabelas oficiais. O texto cinza em cada campo é só exemplo.';
+    dica.textContent = 'Na demonstração, Atividade e cClassTrib são opcionais: a conta ilustrativa usa só o valor do item e as alíquotas de IBS e CBS que você digitar. Na versão completa, os dois códigos são obrigatórios e vêm das tabelas oficiais. O texto em itálico em cada campo é só exemplo. Para ver como fica um item "não calculado", use a atividade 99.';
     return;
   }
   dica.textContent = n === 0

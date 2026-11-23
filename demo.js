@@ -33,6 +33,12 @@ function simular(e) {
 
   const itens = e.itens.map((it, i) => {
     const base = num(it.baseCalculo);
+    // Gatilho só da demonstração para mostrar o estado NAO_CALCULADO do motor real (atividade não admitida).
+    if (it.cAtivSN === '99') {
+      return { numero: i + 1, estado: 'NAO_CALCULADO', calculado: false,
+        rotulo: 'Não calculado (ilustrativo): atividade ausente, fora de vigência ou não admitida no documento',
+        tributos: { vRBSNitem: dois(base) }, erros: [] };
+    }
     const pIBS = num(it.pIBSSN);
     const pCBS = num(it.pCBSSN);
     if (pIBS === null || pCBS === null) {
