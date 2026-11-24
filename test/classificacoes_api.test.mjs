@@ -51,6 +51,11 @@ test('serve as fontes locais com o tipo certo', async () => {
   assert.equal(r.status, 200);
   assert.equal(r.headers.get('content-type'), 'font/woff2');
   assert.match(r.headers.get('content-security-policy'), /font-src 'self'/);
+  for (const f of ['cormorant-garamond-latin-600-normal.woff2', 'cormorant-garamond-latin-500-italic.woff2']) {
+    const c = await fetch(`${base}/fontes/${f}`);
+    assert.equal(c.status, 200, f);
+    assert.equal(c.headers.get('content-type'), 'font/woff2');
+  }
   const o = await fetch(`${base}/orientacao.js`);
   assert.equal(o.status, 200);
   assert.match(o.headers.get('content-type'), /^text\/javascript/);
