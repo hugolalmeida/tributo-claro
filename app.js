@@ -26,6 +26,8 @@ function el(tag, attrs = {}, ...filhos) {
   return e;
 }
 
+import { orientacoes, dataBR } from './orientacao.js';
+
 // Modo demonstração: página estática (GitHub Pages), sem servidor nem motor.
 const DEMO = document.documentElement.dataset.modo === 'demo';
 const apiDemo = DEMO ? (await import('./demo.js')).apiDemo : null;
@@ -48,8 +50,97 @@ function adicionarItem() {
   tr.querySelector('.remover').addEventListener('click', () => {
     if (corpoItens.rows.length > 1) { tr.remove(); renumerar(); }
   });
+  const campo = tr.querySelector('input[name=cClassTrib]');
+  campo.addEventListener('input', () => descreverClassificacao(campo));
+  campo.addEventListener('change', () => descreverClassificacao(campo));
   corpoItens.append(tr);
   renumerar();
+}
+
+// Catálogo oficial de cClassTrib (tabela do motor), filtrado pela data e pelo documento.
+let classificacoes = new Map();
+const pctFator = (f) => `${String(Math.round(Number(f) * 10000) / 100).replace('.', ',')}%`;
+
+function descreverClassificacao(campo) {
+  const desc = campo.parentElement.querySelector('.desc');
+  if (!desc) return;
+  const v = campo.value.trim();
+  const c = classificacoes.get(v);
+  desc.classList.remove('erro');
+  if (!v || !classificacoes.size) { desc.textContent = ''; return; }
+  if (c) {
+    const receita = c.tipoReceita
+      ? ` · Receita bruta: ${c.tipoReceita}${c.fatorReceita === null ? '' : ` (base de IBS/CBS: ${pctFator(c.fatorReceita)} da receita)`}`
+      : '';
+    const aviso = c.naoImplementado ? 'Atenção: o motor da Receita ainda não calcula este código nesta data (o item sairá "não implementado"). ' : '';
+    desc.textContent = `${aviso}${c.descricao}${receita}`;
+    if (c.naoImplementado) desc.classList.add('erro');
+  } else if (/^\d{6}$/.test(v)) {
+    desc.textContent = 'Código fora da lista oficial para esta data e este documento.';
+    desc.classList.add('erro');
+  } else {
+    desc.textContent = 'Escolha um código da lista (digite parte da descrição para buscar).';
+  }
+}
+
+// Primeira data em que o motor calcula cada documento (vem da tabela oficial, via /api/classificacoes).
+const inicioPorDoc = new Map();
+let dataAutomatica = true; // a data ainda é a que a tela preencheu sozinha (hoje)
+let dataAjustada = null;   // data que a tela trocou sozinha para a primeira data aceita
+
+function atualizarAvisoData() {
+  const aviso = $('#aviso-data');
+  const inicio = inicioPorDoc.get(form.tpDoc.value);
+  if (DEMO || !inicio) { aviso.hidden = true; return; }
+  aviso.hidden = false;
+  const antes = form.data.value && form.data.value < inicio;
+  aviso.classList.toggle('erro', Boolean(antes));
+  const ajuste = dataAjustada && form.data.value === dataAjustada
+    ? ` A data foi preenchida com ${dataBR(dataAjustada)}; você pode mudar.` : '';
+  aviso.textContent = antes
+    ? `Atenção: com esta data o motor vai recusar a operação. Pela tabela oficial do motor, este documento só é calculado a partir de ${dataBR(inicio)}.`
+    : `A calculadora da Receita só calcula este documento para operações a partir de ${dataBR(inicio)} (tabela oficial do motor).${ajuste}`;
+}
+
+let ultimaConsultaClassTrib = '';
+async function carregarClassificacoes() {
+  if (DEMO) return;
+  const data = form.data.value;
+  const tpDoc = form.tpDoc.value;
+  const chave = `${data}|${tpDoc}`;
+  if (!data || chave === ultimaConsultaClassTrib) return;
+  ultimaConsultaClassTrib = chave;
+  const dica = $('#dica-classtrib');
+  const lista = $('#lista-classtrib');
+  const { status, corpo } = await api(`/api/classificacoes?data=${encodeURIComponent(data)}&tpDoc=${encodeURIComponent(tpDoc)}`);
+  if (chave !== ultimaConsultaClassTrib) return; // chegou depois de uma consulta mais nova
+  lista.replaceChildren();
+  classificacoes = new Map();
+  dica.hidden = false;
+  if (status !== 200 || !corpo?.disponivel) {
+    dica.textContent = 'A lista oficial de cClassTrib não está disponível neste ambiente. Digite o código de 6 dígitos.';
+    return;
+  }
+  if (corpo.inicioCalculo) inicioPorDoc.set(tpDoc, corpo.inicioCalculo);
+  // Na abertura, a tela preenche a data de hoje. Se hoje o motor ainda não calcula, começa na primeira data aceita.
+  if (dataAutomatica && corpo.inicioCalculo && data < corpo.inicioCalculo) {
+    dataAutomatica = false;
+    form.data.value = corpo.inicioCalculo;
+    dataAjustada = corpo.inicioCalculo;
+    carregarAtividades();
+    return carregarClassificacoes();
+  }
+  atualizarAvisoData();
+  for (const c of corpo.itens) {
+    classificacoes.set(c.codigo, c);
+    const resumo = c.descricao.length > 110 ? `${c.descricao.slice(0, 107)}...` : c.descricao;
+    lista.append(el('option', { value: c.codigo }, `${c.maisUsado ? 'Mais usado pela C&S · ' : ''}${c.codigo} · ${resumo}${c.naoImplementado ? ' (o motor ainda não calcula)' : ''}`));
+  }
+  const n = classificacoes.size;
+  dica.textContent = n === 0
+    ? 'Nenhum cClassTrib vigente nesta data para este documento na tabela oficial.'
+    : `${n} códigos de cClassTrib vigentes nesta data para este documento (tabela oficial do motor). No campo Classificação, digite o código ou parte da descrição.`;
+  corpoItens.querySelectorAll('input[name=cClassTrib]').forEach(descreverClassificacao);
 }
 
 async function carregarRegimes() {
@@ -68,6 +159,7 @@ async function carregarAtividades() {
   const dica = $('#dica-atividades');
   const lista = $('#lista-atividades');
   const { status, corpo } = await api(`/api/atividades?data=${encodeURIComponent(data)}&tpDoc=${encodeURIComponent(tpDoc)}`);
+  if (chave !== ultimaConsulta) return; // chegou depois de uma consulta mais nova (outra data ou documento)
   lista.replaceChildren();
   if (status !== 200 || !Array.isArray(corpo)) {
     dica.textContent = 'Não foi possível carregar a lista de atividades do motor. Você ainda pode digitar o código.';
@@ -107,18 +199,32 @@ function listaErros(erros) {
   return ul;
 }
 
-function mostrarResultado(r) {
+function blocoOrientacoes(erros, entrada) {
+  const textos = orientacoes(erros, { data: entrada?.data, inicioCalculo: inicioPorDoc.get(entrada?.tpDoc) });
+  if (!textos.length) return null;
+  const ul = el('ul', { class: 'orientacoes' });
+  for (const t of textos) ul.append(el('li', {}, t));
+  return el('div', { class: 'orientacao', role: 'note' }, el('strong', {}, 'O que fazer'), ul);
+}
+
+function mostrarResultado(r, entradaAtual = null) {
   const alvo = $('#resultado-conteudo');
   alvo.replaceChildren();
   const res = r.resultado || {};
   const situacao = r.situacao || res.situacao;
+  const entrada = r.entrada || entradaAtual;
 
   alvo.append(el('p', { class: `selo selo-${situacao}` }, `${DEMO ? "Simulação ilustrativa (demonstração)" : "Simulação"} · ${SITUACOES[situacao] || situacao}`));
 
   if (situacao === 'rejeitada') {
+    const erros = r.errosMotor || res.erros;
     alvo.append(el('p', {}, 'O motor recusou a operação inteira. Corrija os pontos abaixo e simule de novo.'));
-    alvo.append(listaErros(r.errosMotor || res.erros));
+    const orient = blocoOrientacoes(erros, entrada);
+    if (orient) alvo.append(orient);
+    alvo.append(listaErros(erros));
   } else {
+    const orient = blocoOrientacoes((res.itens || []).flatMap((it) => it.erros || []), entrada);
+    if (orient) alvo.append(orient);
     const tabela = el('table', { class: 'resultado' });
     tabela.append(el('thead', {}, el('tr', {},
       ...['#', 'Situação do item', 'Receita bruta', 'Base IBS/CBS', 'Alíq. IBS', 'IBS', 'Alíq. CBS', 'CBS', 'Total do item'].map((t) => el('th', {}, t)))));
@@ -145,7 +251,7 @@ function mostrarResultado(r) {
       el('dt', {}, 'IBS simulado'), el('dd', {}, dinheiro(tot.vIBSSNtot)),
       el('dt', {}, 'CBS simulada'), el('dd', {}, dinheiro(tot.vCBSSNtot)),
       el('dt', {}, 'Imposto Seletivo (repassado)'), el('dd', {}, dinheiro(tot.totalIs)),
-      el('dt', {}, DEMO ? 'Total simulado (ilustrativo)' : 'Total simulado'), el('dd', { class: 'destaque' }, dinheiro(tot.totalTributos))));
+      el('dt', { class: 'destaque-rotulo' }, DEMO ? 'Total simulado (ilustrativo)' : 'Total simulado'), el('dd', { class: 'destaque' }, dinheiro(tot.totalTributos))));
     if (situacao !== 'completo') {
       alvo.append(el('p', { class: 'alerta' }, 'Os totais somam só os itens calculados. Itens com outra situação ficaram de fora.'));
     }
@@ -189,17 +295,18 @@ form.addEventListener('submit', async (ev) => {
   botao.disabled = true;
   statusEl.textContent = 'Simulando…';
   try {
+    const entrada = lerFormulario();
     const { status, corpo } = await api('/api/simulacoes', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(lerFormulario()),
+      body: JSON.stringify(entrada),
     });
     if (status === 200) {
       statusEl.textContent = '';
-      mostrarResultado({ ...corpo, situacao: corpo.resultado.situacao });
+      mostrarResultado({ ...corpo, situacao: corpo.resultado.situacao }, entrada);
     } else if (status === 422 && corpo?.errosMotor) {
       statusEl.textContent = '';
-      mostrarResultado({ ...corpo, situacao: 'rejeitada' });
+      mostrarResultado({ ...corpo, situacao: 'rejeitada' }, entrada);
     } else if (status === 422) {
       statusEl.replaceChildren('Confira os campos: ', listaErros(corpo.erros));
     } else {
@@ -214,11 +321,16 @@ form.addEventListener('submit', async (ev) => {
 });
 
 $('#adicionar').addEventListener('click', adicionarItem);
+form.data.addEventListener('change', () => { dataAutomatica = false; atualizarAvisoData(); });
+form.tpDoc.addEventListener('change', atualizarAvisoData);
 form.data.addEventListener('change', carregarAtividades);
+form.data.addEventListener('change', carregarClassificacoes);
 form.tpDoc.addEventListener('change', carregarAtividades);
+form.tpDoc.addEventListener('change', carregarClassificacoes);
 
 form.data.value = new Date().toISOString().slice(0, 10);
 adicionarItem();
 carregarRegimes();
 carregarAtividades();
+carregarClassificacoes();
 carregarHistorico();

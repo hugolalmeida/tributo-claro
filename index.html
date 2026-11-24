@@ -2,7 +2,7 @@
 <html lang="pt-BR" data-modo="demo">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,8 +11,11 @@
 </head>
 <body>
   <header class="topo">
-    <h1>Tributo Claro</h1>
-    <p>Simulador de CBS e IBS para empresas do Simples Nacional (Reforma Tributária, LC 214/2025)</p>
+    <div class="topo-conteudo">
+      <p class="sobretitulo">Reforma Tributária do Consumo · LC 214/2025</p>
+      <h1>Tributo Claro</h1>
+      <p class="subtitulo">Simulador de CBS e IBS por item para empresas do Simples Nacional</p>
+    </div>
   </header>
 
   <aside class="aviso aviso-demo" id="aviso-demo" role="note" hidden>
@@ -52,28 +55,35 @@
             </select>
           </label>
         </div>
+        <p class="dica aviso-data" id="aviso-data" role="note" aria-live="polite" hidden></p>
       </fieldset>
 
       <fieldset>
         <legend>Itens</legend>
         <datalist id="lista-atividades"></datalist>
+        <datalist id="lista-classtrib"></datalist>
         <p class="dica" id="dica-atividades">Escolha a data para carregar as atividades do Simples Nacional.</p>
+        <p class="dica" id="dica-classtrib" hidden></p>
         <table class="itens">
           <thead>
             <tr>
-              <th>#</th><th>Atividade (cAtivSN)</th><th>cClassTrib</th><th>Valor do item (R$)</th>
-              <th>Imposto Seletivo (R$)</th><th>Alíq. IBS (%)</th><th>Alíq. CBS (%)</th><th></th>
+              <th>#</th><th>Atividade (cAtivSN)</th><th>Classificação (cClassTrib)</th><th>Valor do item (R$)</th>
+              <th>Imposto Seletivo (R$)</th><th>Alíq. IBS (%) <abbr class="obrigatorio" title="obrigatória">*</abbr></th><th>Alíq. CBS (%) <abbr class="obrigatorio" title="obrigatória">*</abbr></th><th></th>
             </tr>
           </thead>
           <tbody id="itens"></tbody>
         </table>
         <button type="button" id="adicionar" class="secundario">Adicionar item</button>
-        <p class="dica">Valor do item = produto + frete + seguro + outras despesas − desconto, sem o Imposto Seletivo.
-          As alíquotas efetivas do Simples vêm do cálculo do DAS do período.</p>
+        <p class="dica">Valor do item = produto + frete + seguro + outras despesas − desconto, sem o Imposto Seletivo.</p>
+        <p class="dica" id="ajuda-aliquotas"><strong>* Alíquotas de IBS e CBS:</strong> preencha as duas. O motor da Receita
+          não as calcula: elas são as alíquotas efetivas do Simples Nacional, que vêm do cálculo do DAS do período
+          (peça ao seu contador). Sem elas, o motor recusa o item. Exceção: no regime "excesso de sublimite" não há
+          IBS do Simples, e a alíquota de IBS não é exigida.
+          Para testar a tela: IBS 1,25 e CBS 2,75 (<em>exemplo fictício</em>, não use em apuração).</p>
       </fieldset>
 
       <div class="acoes">
-        <button type="submit" id="simular">Simular</button>
+        <button type="submit" id="simular" class="primario">Simular</button>
         <span id="status" role="status" aria-live="polite"></span>
       </div>
     </form>
@@ -102,11 +112,11 @@
     <tr>
       <td class="num"></td>
       <td><input name="cAtivSN" list="lista-atividades" inputmode="numeric" maxlength="2" placeholder="ex.: 01"></td>
-      <td><input name="cClassTrib" inputmode="numeric" maxlength="6" placeholder="ex.: 000001"></td>
+      <td class="celula-classtrib"><input name="cClassTrib" list="lista-classtrib" autocomplete="off" placeholder="ex.: 000001 ou parte da descrição"><small class="desc" aria-live="polite"></small></td>
       <td><input name="baseCalculo" inputmode="decimal" placeholder="ex.: 1000,00" required></td>
       <td><input name="valorImpostoSeletivo" inputmode="decimal" placeholder="0,00"></td>
-      <td><input name="pIBSSN" inputmode="decimal" placeholder="ex.: 1,25"></td>
-      <td><input name="pCBSSN" inputmode="decimal" placeholder="ex.: 2,75"></td>
+      <td><input name="pIBSSN" inputmode="decimal" placeholder="ex.: 1,25" aria-describedby="ajuda-aliquotas"></td>
+      <td><input name="pCBSSN" inputmode="decimal" placeholder="ex.: 2,75" aria-describedby="ajuda-aliquotas"></td>
       <td><button type="button" class="remover" aria-label="Remover item">×</button></td>
     </tr>
   </template>
