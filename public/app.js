@@ -213,14 +213,17 @@ function blocoOrientacoes(erros, entrada) {
 function cartoesResumo(res) {
   const tot = res.total || {};
   const calculados = (res.itens || []).filter((it) => it.calculado);
-  const chaves = new Set(calculados.map((it) => `${it.tributos?.pIBSSN ?? ''}|${it.tributos?.pCBSSN ?? ''}`));
+  // compara como número: "1.25" e "1.2500" são a mesma alíquota
+  const numero = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+  const chaves = new Set(calculados.map((it) => `${numero(it.tributos?.pIBSSN)}|${numero(it.tributos?.pCBSSN)}`));
   let aliq = '—';
   let aliqNota = 'Sem itens calculados.';
   if (chaves.size === 1) {
     const t = calculados[0].tributos || {};
-    const soma = Math.round(((Number(t.pIBSSN) || 0) + (Number(t.pCBSSN) || 0)) * 10000) / 10000;
-    aliq = pct(soma);
-    aliqNota = `IBS ${pct(t.pIBSSN ?? 0)} + CBS ${pct(t.pCBSSN ?? 0)}`;
+    const ibs = numero(t.pIBSSN);
+    const cbs = numero(t.pCBSSN);
+    aliq = pct(Math.round(((ibs || 0) + (cbs || 0)) * 10000) / 10000);
+    aliqNota = `${ibs === null ? 'IBS não se aplica' : `IBS ${pct(ibs)}`} + ${cbs === null ? 'CBS não se aplica' : `CBS ${pct(cbs)}`}`;
   } else if (chaves.size > 1) {
     aliq = 'Varia por item';
     aliqNota = 'Veja o detalhamento abaixo.';
@@ -229,8 +232,8 @@ function cartoesResumo(res) {
   const cartao = (rotulo, valor, nota, classe = '') => el('div', { class: `resumo ${classe}`.trim() },
     el('p', { class: 'resumo-rotulo' }, rotulo), el('p', { class: 'resumo-valor' }, valor), el('p', { class: 'resumo-nota' }, nota));
   return el('div', { class: 'resumos' },
-    cartao('Receita bruta da operação', dinheiro(tot.vRBSNtot), `${n} ${n === 1 ? 'item calculado' : 'itens calculados'}`),
-    cartao('Alíquota combinada', aliq, aliqNota),
+    cartao('Receita bruta dos itens calculados', dinheiro(tot.vRBSNtot), `${n} ${n === 1 ? 'item calculado' : 'itens calculados'}`),
+    cartao('Alíquota informada (IBS + CBS)', aliq, aliqNota),
     cartao(DEMO ? 'Total simulado (ilustrativo)' : 'Total simulado', dinheiro(tot.totalTributos),
       `IBS ${dinheiro(tot.vIBSSNtot)} · CBS ${dinheiro(tot.vCBSSNtot)}`, 'resumo-destaque'));
 }
@@ -290,7 +293,7 @@ function mostrarResultado(r, entradaAtual = null) {
   const v = r.versaoMotor || {};
   alvo.append(el('h3', { class: 'notas-titulo' }, 'Notas técnicas'));
   alvo.append(el('p', { class: 'meta' },
-    `Motor: versão ${v.app || 'não informada'} · base de dados ${v.banco || 'não informada'}`
+    `Versão do motor de cálculo: ${v.app || 'não informada'} · base de dados ${v.banco || 'não informada'}`
     + (r.criadoEm ? ` · registrado em ${new Date(r.criadoEm).toLocaleString('pt-BR')}` : '')));
   if (DEMO) alvo.append(el('p', { class: 'meta alerta-demo' }, 'Na demonstração, a categoria não altera o cálculo; o resultado vem só do valor e das alíquotas digitadas.'));
   alvo.append(el('p', { class: 'meta' }, 'Estimativa a partir dos dados informados. Não é apuração oficial nem valor a pagar.'));

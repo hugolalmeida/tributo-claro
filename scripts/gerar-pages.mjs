@@ -15,8 +15,8 @@ let html = readFileSync('public/index.html', 'utf8')
   .replace('<title>Tributo Claro ·', '<title>Tributo Claro (demonstração) ·')
   // na demonstração o cClassTrib é opcional: sem "required", o leitor de tela não anuncia obrigatório
   .replace(/(<input name="cClassTrib"[^>]*?) required>/, '$1>')
-  .replace('Cálculo pela <a', 'Na versão completa, o cálculo é feito pela <a');
-if (!html.includes('data-modo="demo"') || !html.includes('Na versão completa') || /<input name="cClassTrib"[^>]* required>/.test(html)) throw new Error('não marcou o modo demo');
+  .replace('Motor de cálculo: <a', 'Motor de cálculo na versão completa (esta demonstração não o usa): <a');
+if (!html.includes('data-modo="demo"') || !html.includes('na versão completa (esta demonstração não o usa)') || /<input name="cClassTrib"[^>]* required>/.test(html)) throw new Error('não marcou o modo demo');
 writeFileSync(`${saida}/index.html`, html);
 writeFileSync(`${saida}/.nojekyll`, '');
 console.log('gerado em _site/');

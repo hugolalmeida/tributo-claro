@@ -21,6 +21,8 @@
   background: var(--bg);
 }
 * { box-sizing: border-box; }
+/* a barra do topo é fixa: o campo focado por Tab não fica escondido atrás dela */
+html { scroll-padding-top: 5rem; }
 body { margin: 0; line-height: 1.55; font-size: 15px; }
 a { color: var(--wine); }
 a:hover { color: var(--dwine); }
