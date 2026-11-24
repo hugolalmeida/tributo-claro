@@ -17,7 +17,7 @@ const ARQUIVOS = {
   '/': ['index.html', 'text/html; charset=utf-8'],
   '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
   '/estilo.css': ['estilo.css', 'text/css; charset=utf-8'],
-  ...Object.fromEntries([400, 600, 700].map((p) => [`/fontes/poppins-latin-${p}-normal.woff2`, [`fontes/poppins-latin-${p}-normal.woff2`, 'font/woff2']])),
+  ...Object.fromEntries([400, 600, 700].map((p) => [`/fontes/manrope-latin-${p}-normal.woff2`, [`fontes/manrope-latin-${p}-normal.woff2`, 'font/woff2']])),
 };
 
 const CABECALHOS_SEGURANCA = {
