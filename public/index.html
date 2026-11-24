@@ -7,102 +7,157 @@
   <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
-  <header class="topo">
-    <div class="topo-conteudo">
-      <p class="sobretitulo">Reforma Tributária do Consumo · LC 214/2025</p>
-      <h1>Tributo Claro</h1>
-      <p class="subtitulo">Simulador de CBS e IBS por item para empresas do Simples Nacional</p>
+  <header class="barra">
+    <div class="barra-conteudo">
+      <a class="marca" href="#topo">
+        <span class="marca-nome">Tributo Claro</span>
+        <span class="marca-assina">Canella &amp; Santos</span>
+      </a>
+      <nav class="menu" aria-label="Seções da página">
+        <a href="#etapa-parametros">Parâmetros</a>
+        <a href="#etapa-historico">Histórico</a>
+      </nav>
+      <a class="botao botao-contorno" href="https://api.whatsapp.com/send/?phone=5524999314445&amp;text&amp;type=phone_number&amp;app_absent=0&amp;utm_source=ig" target="_blank" rel="noopener noreferrer">Atendimento contábil<span class="sr"> (abre o WhatsApp em nova aba)</span></a>
     </div>
   </header>
 
-  <aside class="aviso aviso-demo" id="aviso-demo" role="note" hidden>
-    <strong>Demonstração da tela.</strong> Esta versão não usa o motor da Receita: os valores são uma conta ilustrativa
-    (valor do item × alíquota informada), não o cálculo oficial. Use só para ver a tela. Nada do que você digitar sai do
-    seu navegador, e o histórico some ao recarregar a página.
-  </aside>
+  <div class="pagina" id="topo">
+    <section class="abertura" aria-labelledby="titulo-pagina">
+      <ul class="chips" aria-label="Sobre esta ferramenta">
+        <li class="chip">Reforma Tributária do Consumo · LC 214/2025</li>
+        <li class="chip chip-ouro">Simulação, não apuração oficial</li>
+      </ul>
+      <h1 id="titulo-pagina">Tributo Claro</h1>
+      <p class="subtitulo">Simulador de CBS e IBS por item para empresas do Simples Nacional</p>
+    </section>
 
-  <aside class="aviso" role="note">
-    <strong>Isto é uma simulação, não uma apuração oficial.</strong>
-    Os valores são estimativas feitas a partir dos dados informados e não são o imposto devido.
-    O Tributo Claro usa a calculadora pública da Reforma Tributária, mas não é um produto oficial,
-    homologado ou endossado pela Receita Federal. Confira com o seu contador antes de decidir.
-  </aside>
+    <aside class="aviso aviso-demo" id="aviso-demo" role="note" hidden>
+      <strong>Demonstração da tela.</strong> Esta versão não usa o motor da Receita: os valores são uma conta ilustrativa
+      (valor do item × alíquota informada), não o cálculo oficial. Use só para ver a tela. Nada do que você digitar sai do
+      seu navegador, e o histórico some ao recarregar a página.
+    </aside>
 
-  <main>
-    <form id="form" novalidate>
-      <fieldset>
-        <legend>Operação</legend>
-        <p class="dica alerta-demo" id="aviso-demo-categorias" hidden>Na demonstração, a categoria não altera o cálculo: documento, regime, compra governamental, atividade e cClassTrib não mudam o resultado, que vem só do valor do item e das alíquotas digitadas. Na versão completa, o motor da Receita usa essas informações.</p>
-        <div class="linha">
-          <label>Data da operação <input type="date" name="data" required></label>
-          <label>Documento
-            <select name="tpDoc" required>
-              <option value="55">NF-e (55)</option>
-              <option value="65">NFC-e (65)</option>
-            </select>
-          </label>
-          <label>Regime <select name="regime" id="regime" required></select></label>
-          <label>Compra governamental
-            <select name="tpEnteGov">
-              <option value="">Não</option>
-              <option value="1">União</option>
-              <option value="2">Estado</option>
-              <option value="3">Distrito Federal</option>
-              <option value="4">Município</option>
-            </select>
-          </label>
-        </div>
-        <p class="dica aviso-data" id="aviso-data" role="note" aria-live="polite" hidden></p>
-      </fieldset>
-
-      <fieldset>
-        <legend>Itens</legend>
-        <datalist id="lista-atividades"></datalist>
-        <datalist id="lista-classtrib"></datalist>
-        <p class="dica" id="dica-atividades">Escolha a data para carregar as atividades do Simples Nacional.</p>
-        <p class="dica" id="dica-classtrib" hidden></p>
-        <table class="itens">
-          <thead>
-            <tr>
-              <th>#</th><th>Atividade (cAtivSN)</th><th>Classificação (cClassTrib)</th><th>Valor do item (R$)</th>
-              <th>Imposto Seletivo (R$)</th><th>Alíq. IBS (%) <abbr class="obrigatorio" title="obrigatória">*</abbr></th><th>Alíq. CBS (%) <abbr class="obrigatorio" title="obrigatória">*</abbr></th><th></th>
-            </tr>
-          </thead>
-          <tbody id="itens"></tbody>
-        </table>
-        <button type="button" id="adicionar" class="secundario">Adicionar item</button>
-        <p class="dica">Valor do item = produto + frete + seguro + outras despesas − desconto, sem o Imposto Seletivo.</p>
-        <p class="dica" id="ajuda-aliquotas"><strong>* Alíquotas de IBS e CBS:</strong> preencha as duas. O motor da Receita
-          não as calcula: elas são as alíquotas efetivas do Simples Nacional, que vêm do cálculo do DAS do período
-          (peça ao seu contador). Sem elas, o motor recusa o item. Exceção: no regime "excesso de sublimite" não há
-          IBS do Simples, e a alíquota de IBS não é exigida.
-          Para testar a tela: IBS 1,25 e CBS 2,75 (<em>exemplo fictício</em>, não use em apuração).</p>
-      </fieldset>
-
-      <div class="acoes">
-        <button type="submit" id="simular" class="primario">Simular</button>
-        <span id="status" role="status" aria-live="polite"></span>
+    <aside class="aviso" role="note">
+      <svg class="aviso-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Zm-1 6h2v6h-2V8Zm0 8h2v2h-2v-2Z"/></svg>
+      <div>
+        <strong>Isto é uma simulação, não uma apuração oficial.</strong>
+        Os valores são estimativas feitas a partir dos dados informados e não são o imposto devido.
+        O Tributo Claro usa a calculadora pública da Reforma Tributária, mas não é um produto oficial,
+        homologado ou endossado pela Receita Federal. Confira com o seu contador antes de decidir.
       </div>
-    </form>
+    </aside>
 
-    <section id="resultado" hidden aria-labelledby="titulo-resultado">
-      <h2 id="titulo-resultado">Resultado da simulação</h2>
-      <div id="resultado-conteudo"></div>
-    </section>
+    <main>
+      <section class="cartao etapa" id="etapa-parametros" aria-labelledby="titulo-parametros">
+        <p class="sobrelinha"><span class="etapa-num">Etapa 01</span> Parâmetros</p>
+        <h2 id="titulo-parametros">1. Parâmetros da operação</h2>
+        <p class="etapa-desc">Informe os dados da nota e os itens que serão simulados.</p>
 
-    <section aria-labelledby="titulo-historico">
-      <h2 id="titulo-historico">Histórico</h2>
-      <table class="historico">
-        <thead><tr><th>Quando</th><th>Data da operação</th><th>Itens</th><th>Situação</th><th>Total simulado</th><th></th></tr></thead>
-        <tbody id="historico"></tbody>
-      </table>
-    </section>
-  </main>
+        <form id="form" novalidate>
+          <fieldset>
+            <legend>Operação</legend>
+            <p class="dica alerta-demo" id="aviso-demo-categorias" hidden>Na demonstração, a categoria não altera o cálculo: documento, regime, compra governamental, atividade e cClassTrib não mudam o resultado, que vem só do valor do item e das alíquotas digitadas. Na versão completa, o motor da Receita usa essas informações.</p>
+            <div class="linha">
+              <label>Data da operação <input type="date" name="data" required></label>
+              <label>Documento
+                <select name="tpDoc" required>
+                  <option value="55">NF-e (55)</option>
+                  <option value="65">NFC-e (65)</option>
+                </select>
+              </label>
+              <label>Regime <select name="regime" id="regime" required></select></label>
+              <label>Compra governamental
+                <select name="tpEnteGov">
+                  <option value="">Não</option>
+                  <option value="1">União</option>
+                  <option value="2">Estado</option>
+                  <option value="3">Distrito Federal</option>
+                  <option value="4">Município</option>
+                </select>
+              </label>
+            </div>
+            <p class="dica aviso-data" id="aviso-data" role="note" aria-live="polite" hidden></p>
+          </fieldset>
 
-  <footer>
-    Cálculo pela <a href="https://github.com/ReceitaFederal/calculadora-rtc-simples-nacional" rel="noopener noreferrer">calculadora-rtc-simples-nacional</a>
-    (Receita Federal do Brasil, licença MIT). Código do simulador:
-    <a href="https://github.com/hugolalmeida/tributo-claro" rel="noopener noreferrer">tributo-claro</a>.
+          <fieldset>
+            <legend>Itens da operação</legend>
+            <datalist id="lista-atividades"></datalist>
+            <datalist id="lista-classtrib"></datalist>
+            <p class="dica" id="dica-atividades">Escolha a data para carregar as atividades do Simples Nacional.</p>
+            <p class="dica" id="dica-classtrib" hidden></p>
+            <div class="rolagem">
+              <table class="itens">
+                <thead>
+                  <tr>
+                    <th>#</th><th>Atividade (cAtivSN)</th><th>Classificação (cClassTrib)</th><th>Valor do item (R$)</th>
+                    <th>Imposto Seletivo (R$)</th><th>Alíq. IBS (%) <abbr class="obrigatorio" title="obrigatória">*</abbr></th><th>Alíq. CBS (%) <abbr class="obrigatorio" title="obrigatória">*</abbr></th><th><span class="sr">Remover</span></th>
+                  </tr>
+                </thead>
+                <tbody id="itens"></tbody>
+              </table>
+            </div>
+            <p class="dica">Valor do item = produto + frete + seguro + outras despesas − desconto, sem o Imposto Seletivo.</p>
+            <p class="dica" id="ajuda-aliquotas"><strong>* Alíquotas de IBS e CBS:</strong> preencha as duas. O motor da Receita
+              não as calcula: elas são as alíquotas efetivas do Simples Nacional, que vêm do cálculo do DAS do período
+              (peça ao seu contador). Sem elas, o motor recusa o item. Exceção: no regime "excesso de sublimite" não há
+              IBS do Simples, e a alíquota de IBS não é exigida.
+              Para testar a tela: IBS 1,25 e CBS 2,75 (<em>exemplo fictício</em>, não use em apuração).</p>
+          </fieldset>
+
+          <div class="acoes">
+            <button type="button" id="adicionar" class="secundario">+ Adicionar item</button>
+            <span id="status" role="status" aria-live="polite"></span>
+            <button type="submit" id="simular" class="primario">Simular</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="cartao etapa etapa-resultado" id="resultado" hidden aria-labelledby="titulo-resultado">
+        <p class="sobrelinha"><span class="etapa-num">Etapa 02</span> Resultado</p>
+        <h2 id="titulo-resultado">2. Resultado da simulação</h2>
+        <div id="resultado-conteudo"></div>
+      </section>
+
+      <section class="cartao etapa" id="etapa-historico" aria-labelledby="titulo-historico">
+        <p class="sobrelinha"><span class="etapa-num">Etapa 03</span> Histórico</p>
+        <h2 id="titulo-historico">3. Histórico de simulações</h2>
+        <p class="etapa-desc">Simulações já feitas neste simulador. Use “Ver” para abrir o resultado de novo.</p>
+        <div class="rolagem">
+          <table class="historico">
+            <thead><tr><th>Quando</th><th>Data da operação</th><th>Itens</th><th>Situação</th><th class="direita">Total simulado</th><th><span class="sr">Abrir</span></th></tr></thead>
+            <tbody id="historico"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="cartao chamada" aria-labelledby="titulo-chamada">
+        <div>
+          <h2 id="titulo-chamada">Quer entender o que isso significa para a sua empresa?</h2>
+          <p>Esta é uma estimativa a partir dos dados informados. Cada empresa tem particularidades de compras, receitas e
+            créditos. A revisão por um profissional de contabilidade continua essencial antes de qualquer decisão.</p>
+        </div>
+        <a class="botao botao-primario" href="https://api.whatsapp.com/send/?phone=5524999314445&amp;text&amp;type=phone_number&amp;app_absent=0&amp;utm_source=ig" target="_blank" rel="noopener noreferrer">Agendar diagnóstico tributário<span class="sr"> (abre o WhatsApp em nova aba)</span></a>
+      </section>
+    </main>
+  </div>
+
+  <footer class="rodape">
+    <div class="rodape-conteudo">
+      <div class="rodape-marca">
+        <p class="rodape-nome">Canella &amp; Santos Contabilidade Consultiva</p>
+        <p>
+          Motor de cálculo: <a href="https://github.com/ReceitaFederal/calculadora-rtc-simples-nacional" rel="noopener noreferrer">calculadora-rtc-simples-nacional</a>,
+          publicada pela Receita Federal do Brasil sob licença MIT. Projeto independente, sem vínculo nem endosso da Receita.
+          Código do simulador:
+          <a href="https://github.com/hugolalmeida/tributo-claro" rel="noopener noreferrer">tributo-claro</a>.
+        </p>
+      </div>
+      <p class="rodape-aviso">Estimativa calculada a partir dos dados informados. A revisão técnica por um profissional de
+        contabilidade continua essencial para a tomada de decisão.</p>
+    </div>
+    <div class="rodape-linha">
+      <a href="https://api.whatsapp.com/send/?phone=5524999314445&amp;text&amp;type=phone_number&amp;app_absent=0&amp;utm_source=ig" target="_blank" rel="noopener noreferrer">Fale com a Canella &amp; Santos<span class="sr"> (abre o WhatsApp em nova aba)</span></a>
+    </div>
   </footer>
 
   <template id="tpl-item">

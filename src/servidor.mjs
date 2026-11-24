@@ -18,7 +18,11 @@ const ARQUIVOS = {
   '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
   '/orientacao.js': ['orientacao.js', 'text/javascript; charset=utf-8'],
   '/estilo.css': ['estilo.css', 'text/css; charset=utf-8'],
-  ...Object.fromEntries([400, 600, 700].map((p) => [`/fontes/manrope-latin-${p}-normal.woff2`, [`fontes/manrope-latin-${p}-normal.woff2`, 'font/woff2']])),
+  ...Object.fromEntries([
+    ...[400, 600, 700].map((p) => `manrope-latin-${p}-normal.woff2`),
+    'cormorant-garamond-latin-600-normal.woff2',
+    'cormorant-garamond-latin-500-italic.woff2',
+  ].map((f) => [`/fontes/${f}`, [`fontes/${f}`, 'font/woff2']])),
 };
 
 const CABECALHOS_SEGURANCA = {

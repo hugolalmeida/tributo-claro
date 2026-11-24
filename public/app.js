@@ -207,6 +207,37 @@ function blocoOrientacoes(erros, entrada) {
   return el('div', { class: 'orientacao', role: 'note' }, el('strong', {}, 'O que fazer'), ul);
 }
 
+// Três cartões de resumo. Só repetem números que o motor devolveu; a alíquota
+// combinada é a soma das alíquotas informadas, e só aparece quando todos os
+// itens calculados usam as mesmas.
+function cartoesResumo(res) {
+  const tot = res.total || {};
+  const calculados = (res.itens || []).filter((it) => it.calculado);
+  // compara como número: "1.25" e "1.2500" são a mesma alíquota
+  const numero = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+  const chaves = new Set(calculados.map((it) => `${numero(it.tributos?.pIBSSN)}|${numero(it.tributos?.pCBSSN)}`));
+  let aliq = '—';
+  let aliqNota = 'Sem itens calculados.';
+  if (chaves.size === 1) {
+    const t = calculados[0].tributos || {};
+    const ibs = numero(t.pIBSSN);
+    const cbs = numero(t.pCBSSN);
+    aliq = pct(Math.round(((ibs || 0) + (cbs || 0)) * 10000) / 10000);
+    aliqNota = `${ibs === null ? 'IBS não se aplica' : `IBS ${pct(ibs)}`} + ${cbs === null ? 'CBS não se aplica' : `CBS ${pct(cbs)}`}`;
+  } else if (chaves.size > 1) {
+    aliq = 'Varia por item';
+    aliqNota = 'Veja o detalhamento abaixo.';
+  }
+  const n = calculados.length;
+  const cartao = (rotulo, valor, nota, classe = '') => el('div', { class: `resumo ${classe}`.trim() },
+    el('p', { class: 'resumo-rotulo' }, rotulo), el('p', { class: 'resumo-valor' }, valor), el('p', { class: 'resumo-nota' }, nota));
+  return el('div', { class: 'resumos' },
+    cartao('Receita bruta dos itens calculados', dinheiro(tot.vRBSNtot), `${n} ${n === 1 ? 'item calculado' : 'itens calculados'}`),
+    cartao('Alíquota informada (IBS + CBS)', aliq, aliqNota),
+    cartao(DEMO ? 'Total simulado (ilustrativo)' : 'Total simulado', dinheiro(tot.totalTributos),
+      `IBS ${dinheiro(tot.vIBSSNtot)} · CBS ${dinheiro(tot.vCBSSNtot)}`, 'resumo-destaque'));
+}
+
 function mostrarResultado(r, entradaAtual = null) {
   const alvo = $('#resultado-conteudo');
   alvo.replaceChildren();
@@ -225,6 +256,8 @@ function mostrarResultado(r, entradaAtual = null) {
   } else {
     const orient = blocoOrientacoes((res.itens || []).flatMap((it) => it.erros || []), entrada);
     if (orient) alvo.append(orient);
+    alvo.append(cartoesResumo(res));
+    alvo.append(el('h3', {}, 'Detalhamento por item'));
     const tabela = el('table', { class: 'resultado' });
     tabela.append(el('thead', {}, el('tr', {},
       ...['#', 'Situação do item', 'Receita bruta', 'Base IBS/CBS', 'Alíq. IBS', 'IBS', 'Alíq. CBS', 'CBS', 'Total do item'].map((t) => el('th', {}, t)))));
@@ -243,7 +276,7 @@ function mostrarResultado(r, entradaAtual = null) {
       }
     }
     tabela.append(tb);
-    alvo.append(tabela);
+    alvo.append(el('div', { class: 'rolagem' }, tabela));
 
     const tot = res.total || {};
     alvo.append(el('dl', { class: 'totais' },
@@ -258,8 +291,9 @@ function mostrarResultado(r, entradaAtual = null) {
   }
 
   const v = r.versaoMotor || {};
+  alvo.append(el('h3', { class: 'notas-titulo' }, 'Notas técnicas'));
   alvo.append(el('p', { class: 'meta' },
-    `Motor: versão ${v.app || 'não informada'} · base de dados ${v.banco || 'não informada'}`
+    `Versão do motor de cálculo: ${v.app || 'não informada'} · base de dados ${v.banco || 'não informada'}`
     + (r.criadoEm ? ` · registrado em ${new Date(r.criadoEm).toLocaleString('pt-BR')}` : '')));
   if (DEMO) alvo.append(el('p', { class: 'meta alerta-demo' }, 'Na demonstração, a categoria não altera o cálculo; o resultado vem só do valor e das alíquotas digitadas.'));
   alvo.append(el('p', { class: 'meta' }, 'Estimativa a partir dos dados informados. Não é apuração oficial nem valor a pagar.'));
@@ -282,8 +316,8 @@ async function carregarHistorico() {
       el('td', {}, new Date(s.criadoEm).toLocaleString('pt-BR')),
       el('td', {}, s.data ? s.data.split('-').reverse().join('/') : '—'),
       el('td', {}, s.itens),
-      el('td', {}, SITUACOES[s.situacao] || s.situacao),
-      el('td', {}, dinheiro(s.totalTributos)),
+      el('td', {}, el('span', { class: `selo selo-mini selo-${s.situacao}` }, SITUACOES[s.situacao] || s.situacao)),
+      el('td', { class: 'direita' }, dinheiro(s.totalTributos)),
       el('td', {}, ver)));
   }
   if (!tb.children.length) tb.append(el('tr', {}, el('td', { colspan: '6' }, 'Nenhuma simulação ainda.')));
