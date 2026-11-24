@@ -59,6 +59,12 @@ button.remover:hover { color: var(--err); border-color: var(--err); background: 
 button:disabled { opacity: .6; cursor: wait; }
 .acoes { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.6rem; }
 .dica, .meta { color: var(--muted); font-size: .84rem; }
+.aviso-data { color: var(--teal); font-weight: 600; }
+.aviso-data.erro { color: var(--err); }
+abbr.obrigatorio { color: var(--err); text-decoration: none; font-weight: 700; }
+.orientacao { background: var(--goldbg); border-left: 4px solid var(--gold); border-radius: 8px; padding: .6rem .9rem; margin: .75rem 0; color: var(--navy); font-size: .9rem; }
+.orientacao strong { color: var(--wine); }
+ul.orientacoes { margin: .3rem 0 0; padding-left: 1.2rem; }
 
 /* Resultado e histórico */
 section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1.15rem 1.25rem; margin-bottom: 1.1rem; overflow-x: auto; }

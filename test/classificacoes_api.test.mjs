@@ -8,6 +8,7 @@ const chamadas = [];
 const catalogoFalso = {
   disponivel: true,
   geradoEm: '2026-11-23T00:00:00.000Z',
+  inicioCalculo: (tpDoc) => (tpDoc === '55' ? '2027-01-01' : null),
   listar: (filtro) => { chamadas.push(filtro); return [{ codigo: '111111', descricao: 'Fictício', tpRBSN: 1, tipoReceita: 'x', fatorReceita: 1, maisUsado: false }]; },
 };
 const servidores = [];
@@ -30,7 +31,10 @@ test('GET /api/classificacoes repassa data e documento ao catálogo', async () =
   const corpo = await r.json();
   assert.equal(corpo.disponivel, true);
   assert.equal(corpo.itens[0].codigo, '111111');
+  assert.equal(corpo.inicioCalculo, '2027-01-01');
   assert.deepEqual(chamadas.at(-1), { data: '2027-03-15', tpDoc: '55' });
+  const nfce = await (await fetch(`${base}/api/classificacoes?data=2027-03-15&tpDoc=65`)).json();
+  assert.equal(nfce.inicioCalculo, null);
   assert.equal((await fetch(`${base}/api/classificacoes?data=ontem`)).status, 400);
   assert.equal((await fetch(`${base}/api/classificacoes?data=2027-03-15&tpDoc=57`)).status, 400);
 });
@@ -47,4 +51,7 @@ test('serve as fontes locais com o tipo certo', async () => {
   assert.equal(r.status, 200);
   assert.equal(r.headers.get('content-type'), 'font/woff2');
   assert.match(r.headers.get('content-security-policy'), /font-src 'self'/);
+  const o = await fetch(`${base}/orientacao.js`);
+  assert.equal(o.status, 200);
+  assert.match(o.headers.get('content-type'), /^text\/javascript/);
 });

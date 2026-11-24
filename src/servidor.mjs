@@ -16,6 +16,7 @@ const PASTA_PUBLICA = fileURLToPath(new URL('../public/', import.meta.url));
 const ARQUIVOS = {
   '/': ['index.html', 'text/html; charset=utf-8'],
   '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
+  '/orientacao.js': ['orientacao.js', 'text/javascript; charset=utf-8'],
   '/estilo.css': ['estilo.css', 'text/css; charset=utf-8'],
   ...Object.fromEntries([400, 600, 700].map((p) => [`/fontes/manrope-latin-${p}-normal.woff2`, [`fontes/manrope-latin-${p}-normal.woff2`, 'font/woff2']])),
 };
@@ -91,7 +92,12 @@ export function criarServidor({ motor, historico, hostsPermitidos, catalogo = nu
         return enviar(res, 400, { erro: 'Parâmetros inválidos.' });
       }
       if (!catalogo || !catalogo.disponivel) return enviar(res, 200, { disponivel: false, itens: [] });
-      return enviar(res, 200, { disponivel: true, geradoEm: catalogo.geradoEm, itens: catalogo.listar({ data, tpDoc }) });
+      return enviar(res, 200, {
+        disponivel: true,
+        geradoEm: catalogo.geradoEm,
+        inicioCalculo: tpDoc && typeof catalogo.inicioCalculo === 'function' ? catalogo.inicioCalculo(tpDoc) : null,
+        itens: catalogo.listar({ data, tpDoc }),
+      });
     }
 
     if (req.method === 'GET' && rota === '/api/regimes') {
