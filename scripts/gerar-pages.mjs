@@ -5,7 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync, copyFileSync, rmSync, readdirSy
 const saida = '_site';
 rmSync(saida, { recursive: true, force: true });
 mkdirSync(saida);
-for (const f of ['app.js', 'demo.js', 'estilo.css']) copyFileSync(`public/${f}`, `${saida}/${f}`);
+for (const f of ['app.js', 'demo.js', 'orientacao.js', 'estilo.css']) copyFileSync(`public/${f}`, `${saida}/${f}`);
 mkdirSync(`${saida}/fontes`);
 for (const f of readdirSync('public/fontes')) copyFileSync(`public/fontes/${f}`, `${saida}/fontes/${f}`);
 const csp = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'";

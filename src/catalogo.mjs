@@ -26,6 +26,13 @@ export function carregarCatalogo({ arquivo, arquivoMaisUsados } = {}) {
     disponivel,
     geradoEm: dados?.geradoEm ?? null,
 
+    // Primeira data em que o motor calcula este documento (tabela TIPO_DFE_CALCULO_SIMPLES_NACIONAL).
+    // null = o catálogo não traz essa informação; aí a tela não supõe nenhuma data.
+    inicioCalculo(tpDoc) {
+      const periodos = (dados?.documentosCalculo || []).filter((d) => d.tipo === tpDoc);
+      return periodos.length ? periodos.map((d) => d.inicio).sort()[0] : null;
+    },
+
     listar({ data, tpDoc }) {
       if (!disponivel) return [];
       const tipos = (dados.tiposReceita || []).filter((t) => vigente(t, data));

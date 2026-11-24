@@ -21,6 +21,8 @@ function bancoFicticio(arquivo) {
       TRBS_INICIO_VIGENCIA TEXT, TRBS_FIM_VIGENCIA TEXT);
     CREATE TABLE TRATAMENTO_TRIBUTARIO (TRTR_ID INTEGER, TRTR_IN_POSSUI_AJUSTE INTEGER, TRTR_INICIO_VIGENCIA TEXT, TRTR_FIM_VIGENCIA TEXT);
     CREATE TABLE TRATAMENTO_CLASSIFICACAO (TRCL_ID INTEGER, TRCL_CLTR_ID INTEGER, TRCL_TRTR_ID INTEGER, TRCL_INICIO_VIGENCIA TEXT, TRCL_FIM_VIGENCIA TEXT);
+    CREATE TABLE TIPO_DFE_CALCULO_SIMPLES_NACIONAL (TDCS_ID INTEGER, TDCS_TPDF_ID INTEGER, TDCS_INICIO_VIGENCIA TEXT, TDCS_FIM_VIGENCIA TEXT);
+    INSERT INTO TIPO_DFE_CALCULO_SIMPLES_NACIONAL VALUES (1, 1, '2027-01-01', NULL), (2, 2, '2027-02-01', NULL);
     INSERT INTO TRATAMENTO_TRIBUTARIO VALUES (1, 1, '2026-01-01', NULL), (2, 0, '2026-01-01', NULL);
     INSERT INTO TRIBUTO_SITUACAO_TRIBUTARIA VALUES (1, 10, 2), (2, 20, 1);
     INSERT INTO TIPO_DFE VALUES (1, 55, '2026-01-01', NULL), (2, 65, '2026-01-01', NULL);
@@ -94,6 +96,32 @@ test('catálogo ausente: fica indisponível e devolve lista vazia', () => {
   const cat = carregarCatalogo({ arquivo: join(pasta, 'nao-existe.json') });
   assert.equal(cat.disponivel, false);
   assert.deepEqual(cat.listar({ data: '2027-01-01', tpDoc: '55' }), []);
+  assert.equal(cat.inicioCalculo('55'), null, 'sem catálogo, nenhuma data é suposta');
+});
+
+test('extrator e catálogo: primeira data em que o motor calcula cada documento vem da tabela', () => {
+  const c = JSON.parse(readFileSync(saida, 'utf8'));
+  assert.deepEqual(c.documentosCalculo, [
+    { tipo: '55', inicio: '2027-01-01', fim: null },
+    { tipo: '65', inicio: '2027-02-01', fim: null },
+  ]);
+  const cat = carregarCatalogo({ arquivo: saida });
+  assert.equal(cat.inicioCalculo('55'), '2027-01-01');
+  assert.equal(cat.inicioCalculo('65'), '2027-02-01');
+  assert.equal(cat.inicioCalculo('57'), null);
+});
+
+test('orientações: VSN-015 antes do início aponta a data; alíquotas ausentes explicam a origem', async () => {
+  const { orientacoes } = await import('../public/orientacao.js');
+  const [data] = orientacoes([{ code: 'VSN-015' }], { data: '2026-11-24', inicioCalculo: '2027-01-01' });
+  assert.match(data, /24\/11\/2026/);
+  assert.match(data, /a partir de 01\/01\/2027/);
+  const [semInicio] = orientacoes([{ code: 'VSN-015' }], { data: '2027-03-15', inicioCalculo: '2027-01-01' });
+  assert.doesNotMatch(semInicio, /a partir de/, 'na data aceita, não culpa a data');
+  const [aliq] = orientacoes([{ code: 'VSN-004' }, { code: 'VSN-006' }, { code: 'VSN-004' }], {});
+  assert.match(aliq, /IBS e CBS/);
+  assert.match(aliq, /DAS do período/);
+  assert.deepEqual(orientacoes([{ code: 'VSN-001' }], {}), [], 'código sem orientação não gera texto');
 });
 
 

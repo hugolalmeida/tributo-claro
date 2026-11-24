@@ -62,6 +62,23 @@ const naoImplementados = db.prepare(`
   })
   .filter((p) => p.fim === null || p.inicio <= p.fim);
 
+// Documentos que o cálculo do Simples aceita, e desde quando (TipoDfeCalculoSimplesRepository,
+// contarVinculosVigentes): fora desse período o motor recusa a operação inteira com VSN-015.
+// Guardamos o período em que as 2 vigências se cruzam.
+const documentosCalculo = db.prepare(`
+  SELECT td.TPDF_TIPO AS tipo,
+         MAX(t.TDCS_INICIO_VIGENCIA, td.TPDF_INICIO_VIGENCIA) AS inicio,
+         CASE WHEN t.TDCS_FIM_VIGENCIA IS NULL THEN td.TPDF_FIM_VIGENCIA
+              WHEN td.TPDF_FIM_VIGENCIA IS NULL THEN t.TDCS_FIM_VIGENCIA
+              ELSE MIN(t.TDCS_FIM_VIGENCIA, td.TPDF_FIM_VIGENCIA) END AS fim
+  FROM TIPO_DFE_CALCULO_SIMPLES_NACIONAL t
+  JOIN TIPO_DFE td ON td.TPDF_ID = t.TDCS_TPDF_ID
+  WHERE td.TPDF_TIPO IS NOT NULL
+  ORDER BY td.TPDF_TIPO, inicio
+`).all()
+  .map((d) => ({ tipo: String(d.tipo), inicio: d.inicio, fim: d.fim ?? null }))
+  .filter((d) => d.fim === null || d.inicio <= d.fim);
+
 const tiposReceita = db.prepare(`
   SELECT TRBS_CD AS codigo, TRBS_DESCRICAO AS descricao, TRBS_FATOR_RECEITA AS fator,
          TRBS_INICIO_VIGENCIA AS inicio, TRBS_FIM_VIGENCIA AS fim
@@ -94,6 +111,7 @@ const catalogo = {
     documentos: docsPorCodigo.get(String(c.codigo)) ?? [],
     naoImplementado: naoImplPorCodigo.get(String(c.codigo)) ?? [],
   })),
+  documentosCalculo,
   tiposReceita: tiposReceita.map((t) => ({
     codigo: Number(t.codigo),
     descricao: String(t.descricao ?? ''),
@@ -107,5 +125,9 @@ if (catalogo.classificacoes.length === 0) {
   console.error('nenhuma classificação encontrada: o banco ou o filtro mudou');
   process.exit(1);
 }
+if (documentosCalculo.length === 0) {
+  console.error('nenhum documento aceito pelo cálculo do Simples: o banco ou o filtro mudou');
+  process.exit(1);
+}
 writeFileSync(saida, JSON.stringify(catalogo));
-console.log(`catálogo: ${catalogo.classificacoes.length} classificações, ${vinculos.length} vínculos com documento, ${naoImplementados.length} períodos não implementados, ${catalogo.tiposReceita.length} tipos de receita bruta`);
+console.log(`catálogo: ${catalogo.classificacoes.length} classificações, ${documentosCalculo.length} documentos do cálculo, ${vinculos.length} vínculos com documento,${naoImplementados.length} períodos não implementados, ${catalogo.tiposReceita.length} tipos de receita bruta`);

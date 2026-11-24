@@ -61,6 +61,8 @@ RUN chmod -R a-w /motor
 USER motor
 # 8082 = API (/api), 9103 = health/métricas. Nenhuma porta é publicada no host.
 EXPOSE 8082
-HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
+# start-period longo: em computador lento o motor leva ~3 min para subir (medido em 24/11/2026: 179 s).
+# Falhas dentro desse prazo não contam; o contêiner fica "healthy" assim que o primeiro teste passa.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=300s --start-interval=5s --retries=5 \
   CMD wget -qO- http://127.0.0.1:9103/health >/dev/null || exit 1
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=70", "-Dspring.profiles.active=offline", "-jar", "/motor/app.jar"]
